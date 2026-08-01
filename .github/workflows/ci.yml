@@ -6,7 +6,26 @@ on:
   pull_request:
 
 jobs:
+  # The suite is TypeScript executed directly by `node --test`, which needs a
+  # runtime that strips types without a flag (23.6+) and expands globs in
+  # `--test` (22+). That is a requirement for developing this, not for using it.
   test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  # The packages claim `engines.node >= 20`, so prove the emitted JavaScript
+  # actually loads there. This is what catches a broken `exports` map or an
+  # emitted syntax the floor cannot parse — neither of which the suite above
+  # would notice, since it runs against source on a much newer runtime.
+  engines-floor:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,5 +34,21 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
+      - run: npm run build
+      - name: Every entry point loads on the oldest supported Node
+        run: |
+          node --input-type=module -e "
+            const entries = [
+              'chil-core',
+              'chil-core/conformance',
+              'chil-server',
+              'chil-server/node',
+              'chil-client',
+              'chil-crypto',
+            ];
+            for (const name of entries) {
+              const mod = await import(name);
+              if (Object.keys(mod).length === 0) throw new Error(name + ' exported nothing');
+              console.log('ok', name);
+            }
+          "
