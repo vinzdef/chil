@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    /*
+     * `DOM` is here for exactly one global: WebCrypto's `crypto`. The other way
+     * to get it typed is `@types/node`, and depending on that would make a
+     * package that must run in a Worker and in a browser claim to be a Node
+     * package. Nothing else from `lib.dom` is used.
+     */
+    "lib": ["ES2022", "DOM"],
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"]
+}

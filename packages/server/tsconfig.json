@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    /*
+     * `@types/node` rather than the DOM lib, even though the handler is written
+     * against `Request`/`Response`: modern @types/node declares those globals
+     * too, and mixing both libraries produces conflicting declarations for
+     * `fetch` and friends. The `/node` entry needs node types regardless.
+     */
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../core" }]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "chil-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "typecheck": "tsc -b && tsc -p examples",
+    "test": "npm run build && node --test \"test/*.test.ts\"",
+    "example": "npm run build && node examples/node-memory/server.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.17",
+    "react": "^19.2.8",
+    "typescript": "^5.7.2"
+  }
+}

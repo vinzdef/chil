@@ -1,0 +1,50 @@
+{
+  "name": "chil-client",
+  "version": "0.1.0",
+  "description": "Browser half of the chil exchange: claim, upload with progress, and framework-free session state machines.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "prepack": "tsc -b"
+  },
+  "dependencies": {
+    "chil-core": "0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vinzdef/chil.git",
+    "directory": "packages/client"
+  },
+  "homepage": "https://github.com/vinzdef/chil#readme",
+  "bugs": {
+    "url": "https://github.com/vinzdef/chil/issues"
+  },
+  "author": "Vincent De Feo",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "handoff",
+    "upload",
+    "progress",
+    "state-machine",
+    "browser"
+  ]
+}

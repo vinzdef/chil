@@ -1,0 +1,52 @@
+{
+  "name": "chil-core",
+  "version": "0.1.0",
+  "description": "Protocol, token broker and store contract for single-use token handoff. Zero dependencies, isomorphic.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./conformance": {
+      "types": "./dist/conformance.d.ts",
+      "default": "./dist/conformance.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepack": "tsc -b"
+  },
+  "keywords": [
+    "handoff",
+    "upload",
+    "token",
+    "broker",
+    "protocol",
+    "qr"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vinzdef/chil.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/vinzdef/chil#readme",
+  "bugs": {
+    "url": "https://github.com/vinzdef/chil/issues"
+  },
+  "author": "Vincent De Feo",
+  "publishConfig": {
+    "access": "public"
+  }
+}

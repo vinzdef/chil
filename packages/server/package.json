@@ -1,0 +1,55 @@
+{
+  "name": "chil-server",
+  "version": "0.1.0",
+  "description": "Fetch-API request handlers for the chil token exchange. Runs on Node, Workers, Deno and Bun.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepack": "tsc -b"
+  },
+  "dependencies": {
+    "chil-core": "0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vinzdef/chil.git",
+    "directory": "packages/server"
+  },
+  "homepage": "https://github.com/vinzdef/chil#readme",
+  "bugs": {
+    "url": "https://github.com/vinzdef/chil/issues"
+  },
+  "author": "Vincent De Feo",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "handoff",
+    "upload",
+    "token",
+    "fetch",
+    "workers",
+    "node"
+  ]
+}

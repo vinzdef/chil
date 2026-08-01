@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    // Node runs these files directly by stripping types, which requires the
+    // extension in the specifier. Only legal alongside `noEmit`.
+    "allowImportingTsExtensions": true
+  },
+  "include": ["**/*.ts"]
+}

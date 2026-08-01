@@ -1,0 +1,49 @@
+name: Release
+
+# Publishing is triggered by a tag, never by a merge. The five packages pin each
+# other at exact versions, so they have to go out together or a consumer
+# resolves a chil-client whose chil-core is not on the registry yet. A tag makes
+# "this commit is 0.1.0" explicit, and keeps main free to move without every
+# merge attempting a republish.
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for npm provenance: the signed attestation tying each tarball
+      # to this workflow and commit.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+      # The tag is the source of truth. A tag that disagrees with the manifests
+      # would publish a version nobody can trace back, so stop instead.
+      - name: Tag must match the package versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          for pkg in packages/*/package.json; do
+            version=$(node -p "require('./$pkg').version")
+            if [ "$version" != "$tag" ]; then
+              echo "::error::$pkg is $version, tag is $tag"
+              exit 1
+            fi
+          done
+          echo "all packages at $tag"
+
+      # `prepack` in each workspace rebuilds dist/, which is gitignored.
+      - run: npm publish --workspaces --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
