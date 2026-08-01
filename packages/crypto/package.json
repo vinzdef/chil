@@ -1,6 +1,6 @@
 {
   "name": "@chiljs/crypto",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Optional end-to-end encryption for CHIL. ECDH P-256 + HKDF + AES-GCM, recipient key held non-extractable in IndexedDB.",
   "license": "MIT",
   "type": "module",

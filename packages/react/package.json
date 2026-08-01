@@ -1,6 +1,6 @@
 {
   "name": "@chiljs/react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headless React hooks for the CHIL token exchange. No markup, no styles, no renderer.",
   "license": "MIT",
   "type": "module",
@@ -22,7 +22,7 @@
     "prepack": "tsc -b"
   },
   "dependencies": {
-    "@chiljs/client": "0.1.0"
+    "@chiljs/client": "0.1.1"
   },
   "peerDependencies": {
     "react": ">=18"
