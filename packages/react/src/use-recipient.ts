@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import type { RecipientLike } from 'chil-client';
+import type { RecipientLike } from '@chiljs/client';
 
 /**
- * Anything `chil-crypto`'s `createRecipient` returns. Declared structurally
+ * Anything `@chiljs/crypto`'s `createRecipient` returns. Declared structurally
  * so this package does not depend on the cipher.
  */
 export interface RecipientHandle extends RecipientLike {

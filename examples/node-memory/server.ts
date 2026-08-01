@@ -17,9 +17,9 @@
  *     application must write.
  */
 import { createServer, type IncomingMessage } from 'node:http';
-import { createBroker, type ErrorReason } from 'chil-core';
-import { createHandler, createMintHandler, memorySink } from 'chil-server';
-import { toNodeHandler } from 'chil-server/node';
+import { createBroker, type ErrorReason } from '@chiljs/core';
+import { createHandler, createMintHandler, memorySink } from '@chiljs/server';
+import { toNodeHandler } from '@chiljs/server/node';
 
 const PORT = Number(process.env.PORT ?? 8099);
 const ROOM = 'demo';

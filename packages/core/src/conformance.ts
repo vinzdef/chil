@@ -5,7 +5,7 @@
  * it drops into `node:test`, vitest, or a bare script without this package
  * gaining a test-runner dependency.
  *
- *     import { checkStore } from 'chil-core/conformance';
+ *     import { checkStore } from '@chiljs/core/conformance';
  *     const failures = await checkStore(() => redisStore(url));
  *
  * The check that matters is `claim is atomic under concurrency`. Everything

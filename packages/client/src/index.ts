@@ -27,6 +27,6 @@ export {
   type HandoffState,
 } from './handoff-session.js';
 
-// Re-exported so an application never has to depend on chil-core directly
+// Re-exported so an application never has to depend on @chiljs/core directly
 // just to name a failure or decide whether to offer a retry.
-export { retryable, type ErrorReason, type MintResult } from 'chil-core';
+export { retryable, type ErrorReason, type MintResult } from '@chiljs/core';

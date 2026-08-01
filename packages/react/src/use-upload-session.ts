@@ -4,7 +4,7 @@ import {
   type Transport,
   type UploadEvent,
   type UploadState,
-} from 'chil-client';
+} from '@chiljs/client';
 import { useSession } from './use-session.js';
 
 export interface UseUploadSessionOptions {

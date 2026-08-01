@@ -1,4 +1,4 @@
-import type { ErrorReason } from 'chil-core';
+import type { ErrorReason } from '@chiljs/core';
 
 /**
  * Thrown into the body stream when the upload is refused mid-flight.

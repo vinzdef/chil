@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import type { Observable } from 'chil-client';
+import type { Observable } from '@chiljs/client';
 
 interface Lifecycle<T> extends Observable<T> {
   start(): void;

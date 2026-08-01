@@ -1,17 +1,17 @@
 import assert from 'node:assert/strict';
 import { createServer, type Server } from 'node:http';
 import test, { after } from 'node:test';
-import { createBroker, parseToken, type ErrorReason } from 'chil-core';
-import { createHandler, memorySink, type Sink } from 'chil-server';
-import { toNodeHandler } from 'chil-server/node';
+import { createBroker, parseToken, type ErrorReason } from '@chiljs/core';
+import { createHandler, memorySink, type Sink } from '@chiljs/server';
+import { toNodeHandler } from '@chiljs/server/node';
 import {
   claimantId,
   createHandoffSession,
   createTransport,
   createUploadSession,
   ChilError,
-} from 'chil-client';
-import { createRecipient, createSealer, keyFromFragment, memoryKeyStore } from 'chil-crypto';
+} from '@chiljs/client';
+import { createRecipient, createSealer, keyFromFragment, memoryKeyStore } from '@chiljs/crypto';
 
 const CLAIMANT_A = 'claimant-aaaaaaaaaaaa';
 const CLAIMANT_B = 'claimant-bbbbbbbbbbbb';

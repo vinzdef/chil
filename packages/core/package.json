@@ -1,5 +1,5 @@
 {
-  "name": "chil-core",
+  "name": "@chiljs/core",
   "version": "0.1.0",
   "description": "Protocol, token broker and store contract for single-use token handoff. Zero dependencies, isomorphic.",
   "license": "MIT",

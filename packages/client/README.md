@@ -1,10 +1,10 @@
-# chil-client
+# @chiljs/client
 
 Browser half of [chil](https://github.com/vinzdef/chil): the transport,
 the per-token claimant id, and two framework-free state machines.
 
 ```ts
-import { createTransport, createUploadSession } from 'chil-client';
+import { createTransport, createUploadSession } from '@chiljs/client';
 
 const session = createUploadSession({ token, transport: createTransport() });
 session.subscribe(() => render(session.getState()));
@@ -13,7 +13,7 @@ session.send(blob, { label: name });   // phases: checking → ready → sending
 ```
 
 `getState` / `subscribe` is all `useSyncExternalStore` — or Vue, Svelte, or a
-plain callback — needs. `chil-react` is a thin binding over exactly this.
+plain callback — needs. `@chiljs/react` is a thin binding over exactly this.
 
 `createHandoffSession` is the requester's side: mints, polls, and reports whether the
 code on screen is `live`, `claimed`, `received`, `expired` or `invalid`. It

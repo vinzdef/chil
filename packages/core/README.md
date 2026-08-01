@@ -1,10 +1,10 @@
-# chil-core
+# @chiljs/core
 
 Protocol, token broker and store contract for [chil](https://github.com/vinzdef/chil).
 Isomorphic, zero dependencies — it runs in a browser, in a Worker and on Node.
 
 ```ts
-import { createBroker, memoryStore, parseToken } from "chil-core";
+import { createBroker, memoryStore, parseToken } from "@chiljs/core";
 
 const broker = createBroker({ store: memoryStore(), ttlMs: 5 * 60 * 1000 });
 
@@ -16,7 +16,7 @@ await broker.claim(room, secret, claimantId); // first browser wins
 await broker.consume(secret); // only after the file is stored
 ```
 
-Most applications reach for `chil-server` instead, which wraps this in
+Most applications reach for `@chiljs/server` instead, which wraps this in
 request handlers. Use this package directly when you want the four operations
 and none of the routing.
 
@@ -27,7 +27,7 @@ else must make `claim` and `consume` atomic — see the note on `TokenStore`, an
 run the suite:
 
 ```ts
-import { checkStore } from "chil-core/conformance";
+import { checkStore } from "@chiljs/core/conformance";
 const failures = (await checkStore(() => myStore())).filter((o) => !o.ok);
 ```
 

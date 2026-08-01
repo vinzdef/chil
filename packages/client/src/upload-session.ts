@@ -1,4 +1,4 @@
-import { parseToken, retryable, type ErrorReason } from 'chil-core';
+import { parseToken, retryable, type ErrorReason } from '@chiljs/core';
 import { claimantId } from './claimant-id.js';
 import type { SealerLike } from './sealing.js';
 import { createStore, type Observable } from './store.js';
@@ -38,7 +38,7 @@ export interface UploadSessionOptions {
    *
    * Built from the recipient's public key in the URL fragment, which the server
    * never sees — so with this set, the server stores bytes it cannot read. See
-   * `chil-crypto`.
+   * `@chiljs/crypto`.
    *
    * Three things change when this is on, and none is the library's to hide:
    *
@@ -69,7 +69,7 @@ export interface UploadSessionOptions {
    *
    * This is the courtesy half of the guarantee, not the guarantee: it saves the
    * person from uploading a file only to have it rejected. The enforcement is
-   * `sealedOnly()` from `chil-crypto`, on the server, where a client cannot
+   * `sealedOnly()` from `@chiljs/crypto`, on the server, where a client cannot
    * decline to participate.
    */
   requireSeal?: boolean;

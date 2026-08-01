@@ -1,4 +1,4 @@
-import { uuid } from 'chil-core';
+import { uuid } from '@chiljs/core';
 
 /**
  * The id this browser claims a code with.

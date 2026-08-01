@@ -55,7 +55,7 @@ export type StoreClaim =
  *
  * Implement `claim` as a compare-and-set and `consume` as a delete that reports
  * whether it was the one to delete. Then run `checkStore` from
- * `chil-core/conformance` against it, which tests precisely this.
+ * `@chiljs/core/conformance` against it, which tests precisely this.
  */
 export interface TokenStore {
   put(record: TokenRecord): MaybePromise<void>;

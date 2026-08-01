@@ -24,4 +24,4 @@ export {
   type UploadEvent,
   type UploadPhase,
   type UploadState,
-} from 'chil-client';
+} from '@chiljs/client';

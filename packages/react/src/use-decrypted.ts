@@ -6,7 +6,7 @@ export interface UseDecrypted {
   src: string | null;
   loading: boolean;
   /**
-   * The `CryptoReason` from `chil-crypto` — `no-key`, `wrong-key`,
+   * The `CryptoReason` from `@chiljs/crypto` — `no-key`, `wrong-key`,
    * `corrupt`, `unsupported-version` — or `fetch-failed`.
    *
    * A code, not a sentence. `wrong-key` in particular deserves its own wording:

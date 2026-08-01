@@ -2,7 +2,7 @@ name: Release
 
 # Publishing is triggered by a tag, never by a merge. The five packages pin each
 # other at exact versions, so they have to go out together or a consumer
-# resolves a chil-client whose chil-core is not on the registry yet. A tag makes
+# resolves a @chiljs/client whose @chiljs/core is not on the registry yet. A tag makes
 # "this commit is 0.1.0" explicit, and keeps main free to move without every
 # merge attempting a republish.
 on:

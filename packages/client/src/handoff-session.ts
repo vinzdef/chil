@@ -1,4 +1,4 @@
-import { retryable, type ErrorReason, type MintResult } from 'chil-core';
+import { retryable, type ErrorReason, type MintResult } from '@chiljs/core';
 import { KEY_FRAGMENT_PARAM, type RecipientLike } from './sealing.js';
 import { createStore, type Observable } from './store.js';
 import { ChilError, handoffUrl, type Transport } from './transport.js';
@@ -44,7 +44,7 @@ export interface HandoffSessionOptions {
    * Asks *your* server for a code.
    *
    * A callback rather than a route in this package, because minting must sit
-   * behind your authentication. See `createMintHandler` in `chil-server`.
+   * behind your authentication. See `createMintHandler` in `@chiljs/server`.
    */
   mint: (signal?: AbortSignal) => Promise<MintResult>;
   transport: Transport;

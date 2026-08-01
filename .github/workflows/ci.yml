@@ -39,12 +39,12 @@ jobs:
         run: |
           node --input-type=module -e "
             const entries = [
-              'chil-core',
-              'chil-core/conformance',
-              'chil-server',
-              'chil-server/node',
-              'chil-client',
-              'chil-crypto',
+              '@chiljs/core',
+              '@chiljs/core/conformance',
+              '@chiljs/server',
+              '@chiljs/server/node',
+              '@chiljs/client',
+              '@chiljs/crypto',
             ];
             for (const name of entries) {
               const mod = await import(name);

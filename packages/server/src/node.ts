@@ -1,7 +1,7 @@
 /**
  * Bridge from `node:http` to the Fetch-API handlers.
  *
- * Separate entry point (`chil-server/node`) so that importing the package on
+ * Separate entry point (`@chiljs/server/node`) so that importing the package on
  * Workers or Deno never pulls `node:` specifiers into the graph.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';

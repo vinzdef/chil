@@ -14,7 +14,7 @@ import {
   type ErrorReason,
   type MintResult,
   type UploadResult,
-} from 'chil-core';
+} from '@chiljs/core';
 import { BodyRejected, guardBody } from './body.js';
 import type { Sink } from './sink.js';
 

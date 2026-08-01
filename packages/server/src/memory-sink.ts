@@ -1,4 +1,4 @@
-import { randomId } from 'chil-core';
+import { randomId } from '@chiljs/core';
 import type { Sink, SinkResult, StoreContext } from './sink.js';
 
 export interface StoredItem extends StoreContext {

@@ -1,10 +1,10 @@
 /**
  * Structural types for the optional encryption layer.
  *
- * Declared here, rather than imported, so that `chil-client` never depends
- * on `chil-crypto`. An application that does not encrypt should not ship a
+ * Declared here, rather than imported, so that `@chiljs/client` never depends
+ * on `@chiljs/crypto`. An application that does not encrypt should not ship a
  * cipher, and an application that wants a different construction than the one
- * `chil-crypto` offers should be able to supply it by satisfying these two
+ * `@chiljs/crypto` offers should be able to supply it by satisfying these two
  * shapes.
  */
 

@@ -1,4 +1,4 @@
-# chil
+# CHIL
 
 **C**laimed **H**andoff **I**nbound **L**ink.
 
@@ -7,13 +7,13 @@ short-lived single-use token that travels in a URL. Getting that URL to the
 client is your choice and not this library's: a QR code on screen is good way to do so, a link, an
 SMS. A URL is the whole protocol. Optionally the data can be E2E encrypted.
 
-| Package       | What it is                                  | Runs on                  |
-| ------------- | ------------------------------------------- | ------------------------ |
-| `chil-core`   | protocol, token broker, store contract      | isomorphic, zero deps    |
-| `chil-server` | fetch-API handlers                          | Node, Workers, Deno, Bun |
-| `chil-client` | claim, upload with progress, state machines | any browser              |
-| `chil-react`  | headless hooks                              | React 18+                |
-| `chil-crypto` | optional end-to-end encryption              | WebCrypto                |
+| Package          | What it is                                  | Runs on                  |
+| ---------------- | ------------------------------------------- | ------------------------ |
+| `@chiljs/core`   | protocol, token broker, store contract      | isomorphic, zero deps    |
+| `@chiljs/server` | fetch-API handlers                          | Node, Workers, Deno, Bun |
+| `@chiljs/client` | claim, upload with progress, state machines | any browser              |
+| `@chiljs/react`  | headless hooks                              | React 18+                |
+| `@chiljs/crypto` | optional end-to-end encryption              | WebCrypto                |
 
 ## Support
 
@@ -23,7 +23,7 @@ Released for free to give back to the community.
 If you found this useful, consider supporting me
 on [Buy Me a Coffee](https://buymeacoffee.com/vinzdef) or [GitHub](https://github.com/sponsors/vinzdef).
 
-If you are building (or want to build) something that uses this library, I might be able to help.
+Are you building (or want to build) something that uses this library, I might be able to help.
 
 Get in touch: [https://vincent.codes](https://vincent.codes).
 
@@ -85,10 +85,10 @@ multi-gigabyte uploads. One file, one token, one direction.
 ## Install
 
 ```sh
-npm i chil-server chil-core     # server
-npm i chil-client               # any client — no framework
-npm i chil-react                # React, instead of the above (pulls in chil-client)
-npm i chil-crypto               # optional, either side, end-to-end encryption
+npm i @chiljs/server @chiljs/core   # server
+npm i @chiljs/client                # any client — no framework
+npm i @chiljs/react                 # React, instead of the above (pulls in @chiljs/client)
+npm i @chiljs/crypto                # optional, either side, end-to-end encryption
 ```
 
 Node 20+. ESM only.
@@ -96,9 +96,9 @@ Node 20+. ESM only.
 ## Server
 
 ```ts
-import { createBroker } from 'chil-core';
-import { createHandler, createMintHandler } from 'chil-server';
-import { toNodeHandler } from 'chil-server/node';
+import { createBroker } from '@chiljs/core';
+import { createHandler, createMintHandler } from '@chiljs/server';
+import { toNodeHandler } from '@chiljs/server/node';
 
 const broker = createBroker();            // memoryStore() by default
 
@@ -192,7 +192,7 @@ yours. `url` is a plain string — get it to the client however suits, whether
 that is a QR library you already use or a link you send. Shipping a renderer
 would make this an opinionated UI package instead of a protocol one.
 
-Not React? `createUploadSession` and `createHandoffSession` in `chil-client` are
+Not React? `createUploadSession` and `createHandoffSession` in `@chiljs/client` are
 plain objects with `getState` / `subscribe`, which is all `useSyncExternalStore`
 and every other framework's equivalent need.
 
@@ -215,7 +215,7 @@ first:
 Then prove it:
 
 ```ts
-import { checkStore } from "chil-core/conformance";
+import { checkStore } from "@chiljs/core/conformance";
 const failures = (await checkStore(() => myStore())).filter((o) => !o.ok);
 ```
 
@@ -255,7 +255,7 @@ rise to 512; and `<img src>` becomes fetch → decrypt → object URL. Key loss 
 permanent for anything already queued.
 
 Full detail, including exactly how long an IndexedDB key survives and what
-evicts it: [`chil-crypto`](packages/crypto/README.md).
+evicts it: [`@chiljs/crypto`](packages/crypto/README.md).
 
 ## Privacy
 
@@ -315,6 +315,20 @@ Two more, neither optional:
   since the default referrer policy sends the full URL, token and all, straight
   into your own access log.
 - Keep query strings out of those logs.
+
+## Development
+
+```sh
+npm ci
+npm run typecheck
+npm test
+npm run example      # a full exchange on localhost, in memory
+```
+
+**Node 24+ to run the suite.** The tests are TypeScript executed directly by
+`node --test`, so they need native type stripping. The published packages need
+only Node 20; CI checks that floor separately by importing the built output
+there.
 
 ## Licence
 

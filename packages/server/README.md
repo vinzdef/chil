@@ -1,13 +1,13 @@
-# chil-server
+# @chiljs/server
 
 Fetch-API request handlers for [chil](https://github.com/vinzdef/chil).
 `(Request) => Response | null`, so it runs on Node, Workers, Deno and Bun, and
 returns `null` for paths it does not own so it mounts in front of your router.
 
 ```ts
-import { createBroker } from 'chil-core';
-import { createHandler, createMintHandler } from 'chil-server';
-import { toNodeHandler } from 'chil-server/node';
+import { createBroker } from '@chiljs/core';
+import { createHandler, createMintHandler } from '@chiljs/server';
+import { toNodeHandler } from '@chiljs/server/node';
 
 const exchange = toNodeHandler(createHandler({ broker, sink }));
 

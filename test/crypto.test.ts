@@ -8,8 +8,8 @@ import {
   CryptoFailure,
   HEADER_BYTES,
   sealedOnly,
-} from 'chil-crypto';
-import { handoffUrl } from 'chil-client';
+} from '@chiljs/crypto';
+import { handoffUrl } from '@chiljs/client';
 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0, 1, 2, 3, 4, 5]);
 

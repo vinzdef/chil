@@ -1,5 +1,5 @@
 {
-  "name": "chil-client",
+  "name": "@chiljs/client",
   "version": "0.1.0",
   "description": "Browser half of the chil exchange: claim, upload with progress, and framework-free session state machines.",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "prepack": "tsc -b"
   },
   "dependencies": {
-    "chil-core": "0.1.0"
+    "@chiljs/core": "0.1.0"
   },
   "repository": {
     "type": "git",

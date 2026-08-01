@@ -43,7 +43,7 @@ export interface Broker {
    * Issues a code for `room`.
    *
    * **Must be called behind your own authorisation.** Whoever can mint can
-   * cause an upload into that room. `chil-server` deliberately does not
+   * cause an upload into that room. `@chiljs/server` deliberately does not
    * expose this as a public route.
    *
    * Minting does not revoke an earlier code: a previously issued token stays

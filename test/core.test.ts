@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createBroker, memoryStore, parseToken, retryable, statusFor } from 'chil-core';
-import { checkStore } from 'chil-core/conformance';
+import { createBroker, memoryStore, parseToken, retryable, statusFor } from '@chiljs/core';
+import { checkStore } from '@chiljs/core/conformance';
 
 const CLAIMANT_A = 'claimant-aaaaaaaaaaaa';
 const CLAIMANT_B = 'claimant-bbbbbbbbbbbb';

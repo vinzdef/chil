@@ -1,4 +1,4 @@
-import type { ErrorReason } from 'chil-core';
+import type { ErrorReason } from '@chiljs/core';
 
 export interface StoreContext {
   room: string;

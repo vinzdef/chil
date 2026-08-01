@@ -5,7 +5,7 @@ import {
   type HandoffEvent,
   type HandoffState,
   type Transport,
-} from 'chil-client';
+} from '@chiljs/client';
 import { useSession } from './use-session.js';
 
 export interface UseHandoffSessionOptions {

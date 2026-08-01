@@ -1,4 +1,4 @@
-# chil-crypto
+# @chiljs/crypto
 
 Optional end-to-end encryption for [chil](https://github.com/vinzdef/chil).
 The client seals the upload to a key the server never sees; only the device that
@@ -67,7 +67,7 @@ characters. Leave the default of 120 and the server truncates it, which surfaces
 much later as `corrupt`.
 
 **`<img src>` stops working.** Every image becomes fetch → decrypt → object URL,
-and `Cache-Control` no longer helps. `useDecrypted` in `chil-react` makes it
+and `Cache-Control` no longer helps. `useDecrypted` in `@chiljs/react` makes it
 a one-liner, but it is still a change to your components.
 
 ## How long the key survives — read before shipping

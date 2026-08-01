@@ -7,7 +7,7 @@ import {
   type ErrorBody,
   type ErrorReason,
   type UploadResult,
-} from 'chil-core';
+} from '@chiljs/core';
 
 export class ChilError extends Error {
   constructor(
@@ -176,7 +176,7 @@ export interface HandoffUrlOptions {
    * The fragment exists here for one purpose: a browser never sends it to the
    * server. Anything put here reaches the client in the URL itself, and the
    * server that will store the upload never learns it. That is what makes
-   * end-to-end encryption possible — see `chil-crypto`, which puts the
+   * end-to-end encryption possible — see `@chiljs/crypto`, which puts the
    * recipient's public key here.
    *
    * Never put anything the *server* needs in here; it will not arrive.
