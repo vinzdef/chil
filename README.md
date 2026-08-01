@@ -5,17 +5,7 @@
 An unauthenticated client hands a file to an authenticated session, brokered by a
 short-lived single-use token that travels in a URL. Getting that URL to the
 client is your choice and not this library's: a QR code on screen is good way to do so, a link, an
-SMS. A URL is the whole protocol.
-
-Framework-agnostic core, React bindings, no dependencies.
-Released for free to give back to the community.
-
-If you found this useful, consider supporting me on
-[GitHub](https://github.com/sponsors/vinzdef) or
-[Buy Me a Coffee](https://buymeacoffee.com/vinzdef).
-
-If you are building (or want to) something that uses this library, I might be able to help.
-Get in touch: [https://vincent.codes](https://vincent.codes).
+SMS. A URL is the whole protocol. Optionally the data can be E2E encrypted.
 
 | Package       | What it is                                  | Runs on                  |
 | ------------- | ------------------------------------------- | ------------------------ |
@@ -24,6 +14,18 @@ Get in touch: [https://vincent.codes](https://vincent.codes).
 | `chil-client` | claim, upload with progress, state machines | any browser              |
 | `chil-react`  | headless hooks                              | React 18+                |
 | `chil-crypto` | optional end-to-end encryption              | WebCrypto                |
+
+## Support
+
+Framework-agnostic core, React bindings, no dependencies.
+Released for free to give back to the community.
+
+If you found this useful, consider supporting me
+on [Buy Me a Coffee](https://buymeacoffee.com/vinzdef) or [GitHub](https://github.com/sponsors/vinzdef).
+
+If you are building (or want to build) something that uses this library, I might be able to help.
+
+Get in touch: [https://vincent.codes](https://vincent.codes).
 
 ## The exchange
 
