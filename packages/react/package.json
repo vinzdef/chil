@@ -1,7 +1,7 @@
 {
   "name": "@chiljs/react",
   "version": "0.1.0",
-  "description": "Headless React hooks for the chil token exchange. No markup, no styles, no QR renderer.",
+  "description": "Headless React hooks for the CHIL token exchange. No markup, no styles, no renderer.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

@@ -1,6 +1,6 @@
 # @chiljs/core
 
-Protocol, token broker and store contract for [chil](https://github.com/vinzdef/chil).
+Protocol, token broker and store contract for [CHIL](https://github.com/vinzdef/chil).
 Isomorphic, zero dependencies — it runs in a browser, in a Worker and on Node.
 
 ```ts

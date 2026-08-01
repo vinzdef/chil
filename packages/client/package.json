@@ -1,7 +1,7 @@
 {
   "name": "@chiljs/client",
   "version": "0.1.0",
-  "description": "Browser half of the chil exchange: claim, upload with progress, and framework-free session state machines.",
+  "description": "Browser half of the CHIL exchange: claim, upload with progress, and framework-free session state machines.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

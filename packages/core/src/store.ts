@@ -12,7 +12,7 @@ export interface TokenRecord {
    *
    * Undefined until someone opens the upload page or uploads. Not an
    * authorisation — the token is still what authorises — but it stops a second
-   * client using a code someone else is already working through.
+   * sender using a code someone else is already working through.
    */
   claimedBy?: string;
 }
@@ -48,7 +48,7 @@ export type StoreClaim =
  * **`claim` and `consume` must be atomic.** They are on this interface, rather
  * than being composed in the broker from `get` + `put`, for exactly that
  * reason. In a single process, check-then-write is atomic for free on the event
- * loop. Behind Redis or a KV store it is not: two clients can both read
+ * loop. Behind Redis or a KV store it is not: two senders can both read
  * `claimedBy === undefined`, both write, and both believe they hold the code —
  * at which point claiming is decorative and the property it exists to provide
  * (a copied code is useless to whoever copied it) is silently gone.
@@ -67,7 +67,7 @@ export interface TokenStore {
    * Atomically take the code for `claimant`, or report that someone else has it.
    *
    * Returns `first: true` only when this call is what set `claimedBy`. The same
-   * client claiming again succeeds with `first: false`, so a reload costs
+   * sender claiming again succeeds with `first: false`, so a reload costs
    * nothing.
    */
   claim(secret: string, claimant: string): MaybePromise<StoreClaim>;

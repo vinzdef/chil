@@ -26,7 +26,7 @@ export interface UseHandoffSession extends HandoffState {
  * The requester's panel.
  *
  * Mints on mount, polls while a code is on screen, and reports what the server
- * says about it. `url` is the string to hand to the client — render it as a QR,
+ * says about it. `url` is the string to hand to the sender — render it as a QR,
  * send it as a link — with whatever you already have, since this package ships
  * no renderer.
  *

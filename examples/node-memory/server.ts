@@ -110,7 +110,7 @@ setInterval(() => void broker.sweep(), 60_000).unref();
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`
-  chil example on http://127.0.0.1:${PORT}
+  CHIL example on http://127.0.0.1:${PORT}
 
   Mint a code (requester side, password "${REQUESTER_PASSWORD}"):
     curl -s -u requester:${REQUESTER_PASSWORD} -XPOST http://127.0.0.1:${PORT}/requester/mint

@@ -1,6 +1,6 @@
 # @chiljs/react
 
-Headless React hooks for [chil](https://github.com/vinzdef/chil). No
+Headless React hooks for [CHIL](https://github.com/vinzdef/chil). No
 markup, no styles, no QR renderer.
 
 ```tsx

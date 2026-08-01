@@ -2,10 +2,16 @@
 
 **C**laimed **H**andoff **I**nbound **L**ink.
 
-An unauthenticated client hands a file to an authenticated session, brokered by a
+An unauthenticated sender hands a file to an authenticated (or otherwise trusted) session, brokered by a
 short-lived single-use token that travels in a URL. Getting that URL to the
-client is your choice and not this library's: a QR code on screen is good way to do so, a link, an
-SMS. A URL is the whole protocol. Optionally the data can be E2E encrypted.
+sender is your choice and not this library's: a QR code on screen is good way to do so, a link, an
+SMS.
+
+Optionally the data can be E2E encrypted.
+
+Framework-agnostic core, React bindings, no dependencies.
+
+---
 
 | Package          | What it is                                  | Runs on                  |
 | ---------------- | ------------------------------------------- | ------------------------ |
@@ -17,20 +23,17 @@ SMS. A URL is the whole protocol. Optionally the data can be E2E encrypted.
 
 ## Support
 
-Framework-agnostic core, React bindings, no dependencies.
-Released for free to give back to the community.
-
 If you found this useful, consider supporting me
 on [Buy Me a Coffee](https://buymeacoffee.com/vinzdef) or [GitHub](https://github.com/sponsors/vinzdef).
 
-Are you building (or want to build) something that uses this library, I might be able to help.
+Are you building (or want to build) something that uses this library? I might be able to help.
 
 Get in touch: [https://vincent.codes](https://vincent.codes).
 
 ## The exchange
 
 ```
-requester                      server                         user
+requester                      server                        sender
    │                             │                             │
    │──────── mint(room) ────────▶│                             │
    │◀─────── token, flow ────────│                             │
@@ -46,40 +49,34 @@ requester                      server                         user
    │◀────── already-sent ────────│                             │
 ```
 
-Four properties, which are the reason this exists as a library rather than as
-forty lines you write yourself:
+Four properties, which are the reason this exists as a library:
 
-- **The token is consumed on success only.** A dropped upload is retryable with
-  the same code. This is the difference between a failed transfer and someone
-  queueing again for a fresh one.
-- **Claim, check and consume are three operations.** The requester's panel polls
-  `check`; if checking also claimed, the panel would take the code before the
-  person on the other device had used it.
-- **Spent tokens leave a tombstone.** A reload after a successful send says "it
-  arrived", not "your link is broken".
-- **The correlation id and the credential are different values.** `flow` is safe
+- **The token is consumed on success only.** <br/> A dropped upload is retryable with
+  the same code.
+- **Claim, check and consume are three operations.**
+- **Spent tokens leave a tombstone.** <br/> So a sender can know the upload went fine after reloading that same URL (for a configurable amount of time).
+- **The correlation id and the credential are different values.** <br/> `flow` is safe
   to send to an analytics collector. The claimant id is not, and never leaves your
   origin. See [Privacy](#privacy).
 
 ## Use cases
 
-Always the same shape: a session that is already authenticated needs a file from
-a device that is not, and nobody wants to install an app or create an account to
-move it.
+A session **that is already authenticated or trusted** needs a file from
+a device that is not.
 
-- **Capture from a phone into a desktop session.** Someone at a workstation
+- **Capture from a phone into a desktop session.** <br/> Someone at a workstation
   needs a file taken right now. The phone opens a URL, sends one file, done.
-- **Counter and kiosk intake.** ID documents, proof of address, a signed form.
+- **Counter and kiosk intake.** <br/> ID documents, proof of address, a signed form.
   The customer uses their own phone; the teller's session receives it; the
-  customer never gets an account.
-- **Field work against an existing ticket.** Files onto a work order or a claim
+  customer never needs an account.
+- **Field work against an existing ticket.** <br/> Files onto a work order or a claim
   from whichever phone is on site, into a terminal someone else is logged into.
-- **Guest drop.** A one-time upload link to an outside party — contractor,
-  client, applicant — that expires and cannot be reused.
-- **Your own second device.** You are on a laptop and the file is on your phone.
+- **Guest drop.** <bt/> A one-time upload link to an outside party: contractor,
+  client, applicant.
+- **Your own second device.** <br/> You are on a laptop and the file is on your phone.
   No app, no emailing it to yourself.
 
-Not this: multi-device sync, a general file-transfer service, or resumable
+This is not: multi-device sync, a general file-transfer service, or resumable
 multi-gigabyte uploads. One file, one token, one direction.
 
 ## Install
@@ -151,7 +148,7 @@ const sink: Sink = {
 
 Two obligations: let `BodyRejected` propagate (it is how a too-large or
 wrong-format upload is refused mid-flight — clean up your partial write in a
-`finally` and rethrow), and expect to be called again after a client's
+`finally` and rethrow), and expect to be called again after a sender's
 connection drops.
 
 ## React
@@ -188,13 +185,13 @@ function Panel() {
 ```
 
 The hooks return `reason` codes, never sentences: the copy and the language are
-yours. `url` is a plain string — get it to the client however suits, whether
+yours. `url` is a plain string — get it to the sender however suits, whether
 that is a QR library you already use or a link you send. Shipping a renderer
 would make this an opinionated UI package instead of a protocol one.
 
-Not React? `createUploadSession` and `createHandoffSession` in `@chiljs/client` are
-plain objects with `getState` / `subscribe`, which is all `useSyncExternalStore`
-and every other framework's equivalent need.
+> **Not React?** Good. `createUploadSession` and `createHandoffSession` in `@chiljs/client` are
+> plain objects with `getState` / `subscribe`, which is all `useSyncExternalStore`
+> and every other framework's equivalent need.
 
 ## Other token stores
 
@@ -222,7 +219,7 @@ const failures = (await checkStore(() => myStore())).filter((o) => !o.ok);
 ## End-to-end encryption (optional)
 
 Browsers never send a URL fragment to the server, so the requester's public key
-can reach the client out of band and the server stores bytes it cannot read.
+can reach the sender out of band and the server stores bytes it cannot read.
 
 ```ts
 const recipient = await createRecipient({ scope: room }); // IndexedDB, non-extractable
@@ -232,16 +229,18 @@ createHandler({ broker, sink, inspect: sealedOnly() }); // server refuses plaint
 ```
 
 **In an encrypted deployment, plaintext must never be accepted — so the server
-enforces it.** The key travels in the URL fragment, and link rewriters, chat
+enforces it.**
+
+The key travels in the URL fragment, and link rewriters, chat
 preview generators and URL shorteners all strip fragments. When that happens the
-uploading page has nothing to seal with, and the failure is otherwise silent:
-the file arrives in the clear and neither end says so. `sealedOnly()` refuses
+uploading page has nothing to seal with, and the failure would otherwise be silent:
+the file would arrive in the clear and neither end would say so. `sealedOnly()` refuses
 any body without a seal header, before the sink is called. `requireSeal` is the
-matching courtesy on the client — it fails up front rather than after the person
+matching courtesy on the sender: it fails up front rather than after the person
 has uploaded a file.
 
-That guard stops accidental plaintext, which is the real failure. It cannot stop
-a forgery: anyone can prepend the header bytes to junk, just as they could seal
+That guard stops accidental plaintext, which is the real failure. **It cannot stop
+a forgery**: anyone can prepend the header bytes to junk, just as they could seal
 to a key nobody holds. No server that cannot decrypt can tell those apart.
 
 Off by default, and worth turning on only when **storage is a different trust
@@ -251,15 +250,14 @@ JavaScript doing the encryption.
 
 Three costs, none hideable: `inspect` can no longer check the payload's format,
 since that is encrypted — use `sealedOnly()` in its place; `maxLabelLength` must
-rise to 512; and `<img src>` becomes fetch → decrypt → object URL. Key loss is
-permanent for anything already queued.
+rise to 512; and loading that file adds a decryption step.
+
+**Key loss is permanent for anything already queued.**
 
 Full detail, including exactly how long an IndexedDB key survives and what
 evicts it: [`@chiljs/crypto`](packages/crypto/README.md).
 
 ## Privacy
-
-Two ids, and the distinction is load-bearing.
 
 | Id          | Scope       | On device        | Safe to send to analytics    |
 | ----------- | ----------- | ---------------- | ---------------------------- |

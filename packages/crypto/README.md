@@ -1,7 +1,7 @@
 # @chiljs/crypto
 
-Optional end-to-end encryption for [chil](https://github.com/vinzdef/chil).
-The client seals the upload to a key the server never sees; only the device that
+Optional end-to-end encryption for [CHIL](https://github.com/vinzdef/chil).
+The sender seals the upload to a key the server never sees; only the device that
 issued the handoff can open it.
 
 ```ts
@@ -9,7 +9,7 @@ issued the handoff can open it.
 const recipient = await createRecipient({ scope: room });
 useHandoffSession({ mint, transport, recipient }); // public key goes in the URL fragment
 
-// Client — reads the fragment, seals inside send().
+// Sender — reads the fragment, seals inside send().
 const key = keyFromFragment();
 useUploadSession({
   token,
@@ -28,7 +28,7 @@ anything.
 
 ## Why the fragment
 
-A browser never sends `#…` to the server. The key reaches the client in the URL
+A browser never sends `#…` to the server. The key reaches the sender in the URL
 itself, so the server that stores the ciphertext never learns it. Put the same
 value in the query string and the encryption is decorative.
 

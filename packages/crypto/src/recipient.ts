@@ -22,7 +22,7 @@ export interface Recipient {
    * Whether this device can unseal these bytes, without attempting it.
    *
    * For a list view: it distinguishes "sealed to a key this device no longer
-   * has" from "corrupt", which are different things to tell an requester.
+   * has" from "corrupt", which are different things to tell a requester.
    */
   canDecrypt(data: Uint8Array): { ok: true } | { ok: false; reason: 'wrong-key' | 'corrupt' };
 }

@@ -67,7 +67,7 @@ export const storeChecks: StoreCheck[] = [
   },
 
   {
-    name: 'first claim wins, the same client may return, a second client is refused',
+    name: 'first claim wins, the same sender may return, a second sender is refused',
     async run(store) {
       const written = record();
       await store.put(written);
@@ -77,11 +77,11 @@ export const storeChecks: StoreCheck[] = [
       assert(first.first === true, 'the first claim must report first: true');
 
       const again = await store.claim(written.secret, 'claimant-aaaaaaaaaaaa');
-      assert(again.status === 'ok', 'the same client must be allowed back');
+      assert(again.status === 'ok', 'the same sender must be allowed back');
       assert(again.first === false, 'a returning claimant must report first: false');
 
       const other = await store.claim(written.secret, 'claimant-bbbbbbbbbbbb');
-      assert(other.status === 'conflict', `a second client must conflict, got ${other.status}`);
+      assert(other.status === 'conflict', `a second sender must conflict, got ${other.status}`);
     },
   },
 

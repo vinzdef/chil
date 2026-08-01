@@ -1,6 +1,6 @@
 # @chiljs/client
 
-Browser half of [chil](https://github.com/vinzdef/chil): the transport,
+Browser half of [CHIL](https://github.com/vinzdef/chil): the transport,
 the per-token claimant id, and two framework-free state machines.
 
 ```ts

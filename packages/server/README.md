@@ -1,6 +1,6 @@
 # @chiljs/server
 
-Fetch-API request handlers for [chil](https://github.com/vinzdef/chil).
+Fetch-API request handlers for [CHIL](https://github.com/vinzdef/chil).
 `(Request) => Response | null`, so it runs on Node, Workers, Deno and Bun, and
 returns `null` for paths it does not own so it mounts in front of your router.
 

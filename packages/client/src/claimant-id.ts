@@ -3,7 +3,7 @@ import { uuid } from '@chiljs/core';
 /**
  * The id this browser claims a code with.
  *
- * The server gives a code to the first client that claims it and refuses any
+ * The server gives a code to the first sender that claims it and refuses any
  * other, so this value is what separates "the same person reloaded the page"
  * from "someone else copied the code off the screen". It proves nothing
  * about who the browser is; it only has to be the same value across every
@@ -46,7 +46,7 @@ export interface ClaimantIdOptions {
   /**
    * Defaults to `sessionStorage` — never `localStorage`. The id is meaningful
    * for one visit to one code; a value that outlived the tab would still be
-   * there the next time the same client opened a different code.
+   * there the next time the same sender opened a different code.
    */
   storage?: Pick<Storage, 'getItem' | 'setItem'> | null;
   /**

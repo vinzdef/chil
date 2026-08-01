@@ -10,7 +10,7 @@ export interface UseDecrypted {
    * `corrupt`, `unsupported-version` — or `fetch-failed`.
    *
    * A code, not a sentence. `wrong-key` in particular deserves its own wording:
-   * it means this device is not the one that issued the handoff, which an requester
+   * it means this device is not the one that issued the handoff, which a requester
    * can act on, unlike "corrupt".
    */
   reason: string | null;

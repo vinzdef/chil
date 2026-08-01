@@ -3,7 +3,7 @@
  *
  * Codes rather than sentences, for the same reason `ErrorReason` is: the
  * wording, and the language, belong to the application. These are the four
- * cases an requester's dashboard has to be able to tell apart.
+ * cases a requester's dashboard has to be able to tell apart.
  */
 export type CryptoReason =
   /**

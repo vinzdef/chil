@@ -71,7 +71,7 @@ export const DEFAULT_MAX_LABEL_LENGTH = 120;
 
 /*
  * Declared once, here, because the two ends only agree if they spell them the
- * same way. A client that claims with `client` and uploads with `claimantId`
+ * same way. A sender that claims with `client` and uploads with `claimantId`
  * turns the claim check into a formality that always passes.
  */
 export const TOKEN_PARAM = 'token';
@@ -107,7 +107,7 @@ export function isValidSecret(secret: string): boolean {
  * Wide enough for a UUID, narrow enough that the value can only ever be an
  * opaque handle: it is compared and stored against a token, never used to build
  * a path or a query. The length floor matters — a one-character id would be
- * trivially guessable by a second client wanting to impersonate the first.
+ * trivially guessable by a second sender wanting to impersonate the first.
  */
 const CLAIMANT_ID_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
 
@@ -191,7 +191,7 @@ export type ErrorReason =
    *
    * Distinct from `already-sent`: nothing was uploaded and the code may still
    * be spent by whoever claimed it. The person seeing this is the second
-   * client — typically someone who copied the code off a screen.
+   * sender — typically someone who copied the code off a screen.
    */
   | 'already-claimed'
   | 'expired-token'
@@ -200,7 +200,7 @@ export type ErrorReason =
   /**
    * Sealing was required and no usable recipient key arrived.
    *
-   * Raised by the client, never by the server: the key travels in the URL
+   * Raised by the sender, never by the server: the key travels in the URL
    * fragment, which link rewriters and preview generators strip, and the whole
    * point is that losing it must not silently downgrade to plaintext. Lives in
    * this union so a page translates one set of codes rather than two.
@@ -240,7 +240,7 @@ export const retryable: Record<ErrorReason, boolean> = {
 /**
  * HTTP status for a refusal.
  *
- * Here rather than in the server package because the client reads it too: a
+ * Here rather than in the server package because the sender reads it too: a
  * response with no parseable body still has a status, and it is the only thing
  * left to guess a reason from.
  */
@@ -261,7 +261,7 @@ export function statusFor(reason: ErrorReason): number {
       return 413;
     case 'bad-type':
       return 415;
-    // Client-side only. Mapped so the union stays exhaustive; a server that
+    // Sender-side only. Mapped so the union stays exhaustive; a server that
     // somehow emitted it is refusing an unacceptable body.
     case 'seal-required':
       return 415;

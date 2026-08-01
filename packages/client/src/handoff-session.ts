@@ -17,7 +17,7 @@ export interface HandoffState {
   phase: HandoffPhase;
   token: string | null;
   /**
-   * The string to hand to the client — render it as a QR, send it as a link.
+   * The string to hand to the sender — render it as a QR, send it as a link.
    * Null while minting or after a failure.
    */
   url: string | null;
@@ -51,7 +51,7 @@ export interface HandoffSessionOptions {
   /** Defaults to `handoffUrl({ token })` — this origin, `/upload`. */
   buildUrl?: (token: string) => string;
   /**
-   * Puts this device's public key in the URL fragment, so the client can seal the
+   * Puts this device's public key in the URL fragment, so the sender can seal the
    * upload to it and the server stores something it cannot read.
    *
    * Ignored when `buildUrl` is supplied — build the fragment yourself with
@@ -153,7 +153,7 @@ export function createHandoffSession(options: HandoffSessionOptions): HandoffSes
       void transport.check(token, controller.signal).then(
         (state) => {
           if (destroyed || store.getState().token !== token) return;
-          // A claim says a client has taken it, which is worth showing but
+          // A claim says a sender has taken it, which is worth showing but
           // changes nothing about the code itself. Polling continues.
           const claimed = state.claimed;
           const previous = store.getState().phase;

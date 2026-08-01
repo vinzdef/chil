@@ -84,7 +84,7 @@ export function readHeader(bytes: Bytes): Header | null {
  * An `inspect` guard that refuses any body which is not sealed.
  *
  * This is how "encrypted deployment" becomes a property of the server rather
- * than a promise the client makes. If the recipient key is stripped out of the
+ * than a promise the sender makes. If the recipient key is stripped out of the
  * URL fragment in transit, the uploader's page has nothing to seal with — and
  * without this, the plaintext is accepted and stored with nobody the wiser.
  * Here the body is refused before the sink is ever called.
@@ -107,7 +107,7 @@ export function sealedOnly(): (head: Uint8Array) => 'bad-type' | null {
     if (head.length <= MAGIC.length) return 'bad-type';
     if (!hasMagic(head)) return 'bad-type';
     // Deliberately not upper-bounded against VERSION: the server only stores
-    // these bytes, so a client sealing with a newer version must not be refused
+    // these bytes, so a sender sealing with a newer version must not be refused
     // by an older server that could have held them perfectly well.
     return head[MAGIC.length]! >= 1 ? null : 'bad-type';
   };

@@ -20,7 +20,7 @@ import type { Sink } from './sink.js';
 
 /**
  * Handlers answer with `null` when the path is not theirs, so they compose:
- * try chil, fall through to your own router.
+ * try CHIL, fall through to your own router.
  */
 export type ChilHandler = (request: Request) => Promise<Response | null>;
 
@@ -106,7 +106,7 @@ export function createHandler(options: HandlerOptions): ChilHandler {
    *   would skip the page and POST straight here, and claiming would be
    *   decorative;
    * - the token is consumed only once the sink reports success, so an
-   *   interrupted upload is retryable with the same code by the same client,
+   *   interrupted upload is retryable with the same code by the same sender,
    *   whose claim is still standing.
    */
   async function upload(request: Request, url: URL): Promise<Response> {

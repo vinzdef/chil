@@ -174,7 +174,7 @@ export interface HandoffUrlOptions {
    * Values for the URL fragment, as `#k=…&…`.
    *
    * The fragment exists here for one purpose: a browser never sends it to the
-   * server. Anything put here reaches the client in the URL itself, and the
+   * server. Anything put here reaches the sender in the URL itself, and the
    * server that will store the upload never learns it. That is what makes
    * end-to-end encryption possible — see `@chiljs/crypto`, which puts the
    * recipient's public key here.
@@ -185,7 +185,7 @@ export interface HandoffUrlOptions {
 }
 
 /**
- * Builds the handoff URL — the string the client receives.
+ * Builds the handoff URL — the string the sender receives.
  *
  * Rendering is deliberately not this package's job: the choice of canvas, SVG,
  * error-correction level and styling belongs to the application, and dragging a

@@ -57,14 +57,14 @@ export interface Broker {
    * Free to call and safe to poll. Separate from `claim` on purpose: an
    * requester's panel polls this to notice its code has been used, and a check
    * that claimed would have the panel take the claim before the person holding
-   * the client had finished with it.
+   * the sender had finished with it.
    */
   check(room: string, secret: string): Promise<Verdict>;
 
   /**
    * Verdict on a token, recording which browser is using it.
    *
-   * The first client to arrive takes the code; the same client may come back as
+   * The first sender to arrive takes the code; the same sender may come back as
    * often as it likes, so a reload costs nothing; anyone else is refused with
    * `already-claimed`. That is what stops a code copied off a screen from
    * being usable by whoever copied it.

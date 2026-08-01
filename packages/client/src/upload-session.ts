@@ -69,7 +69,7 @@ export interface UploadSessionOptions {
    *
    * This is the courtesy half of the guarantee, not the guarantee: it saves the
    * person from uploading a file only to have it rejected. The enforcement is
-   * `sealedOnly()` from `@chiljs/crypto`, on the server, where a client cannot
+   * `sealedOnly()` from `@chiljs/crypto`, on the server, where a sender cannot
    * decline to participate.
    */
   requireSeal?: boolean;
@@ -156,7 +156,7 @@ export function createUploadSession(options: UploadSessionOptions): UploadSessio
           return;
         }
         // Only a verdict on the token itself blocks the form. A claim that
-        // could not complete — offline client, server hiccup — must not lock out
+        // could not complete — offline sender, server hiccup — must not lock out
         // someone holding a perfectly good code; the upload claims again
         // anyway, with the same claimant id, so nothing is lost but the flow id.
         if (retryable[reason]) {

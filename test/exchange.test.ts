@@ -201,11 +201,11 @@ test('a large body is refused with a status, not a reset', async () => {
   const { baseUrl, broker } = await harness({ maxBytes: 64 });
   const { token } = await broker.mint('shop');
 
-  // Big enough that the client is still writing when the refusal is decided —
+  // Big enough that the sender is still writing when the refusal is decided —
   // several megabytes will not fit in the socket buffers. Refusing without
   // draining the remainder stalls until the server's request timeout and the
   // client sees a 408; destroying the socket instead resets the connection and
-  // the client sees no status at all. Both have happened here.
+  // the sender sees no status at all. Both have happened here.
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
       controller.enqueue(JPEG);
@@ -289,7 +289,7 @@ test('a refused upload leaves the code usable — this is the whole point', asyn
     transport.upload({ token, claimant: CLAIMANT_A, body: NOT_JPEG, contentType: 'image/jpeg' }),
   );
 
-  // Same code, same client, second attempt: accepted.
+  // Same code, same sender, second attempt: accepted.
   const result = await transport.upload({
     token,
     claimant: CLAIMANT_A,
@@ -532,7 +532,7 @@ test('the handoff url carries the key in its fragment, so the mint never sees it
   assert.equal(parsed.searchParams.get('k'), null);
   assert.ok(parsed.hash.includes(recipient.publicKey), 'the key must ride in the fragment');
 
-  // The client rebuilds the sealer from the fragment, with no server round trip.
+  // The sender rebuilds the sealer from the fragment, with no server round trip.
   const scanned = keyFromFragment(parsed.hash);
   assert.equal(scanned, recipient.publicKey);
   const seal = await createSealer(scanned!);

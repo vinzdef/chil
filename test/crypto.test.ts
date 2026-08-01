@@ -207,7 +207,7 @@ test('sealedOnly accepts a real sealed body, and any future version', async () =
 
   assert.equal(guard(sealed.subarray(0, 16)), null, 'the guard only ever sees the head');
 
-  // A server that only stores bytes must not refuse a client sealing with a
+  // A server that only stores bytes must not refuse a sender sealing with a
   // version it has not heard of, or an upgrade strands every older server.
   const future = Uint8Array.from([0x43, 0x48, 0x4c, 99]);
   assert.equal(guard(future), null);
