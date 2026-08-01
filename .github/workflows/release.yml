@@ -2,9 +2,9 @@ name: Release
 
 # Publishing is triggered by a tag, never by a merge. The five packages pin each
 # other at exact versions, so they have to go out together or a consumer
-# resolves a @chiljs/client whose @chiljs/core is not on the registry yet. A tag makes
-# "this commit is 0.1.0" explicit, and keeps main free to move without every
-# merge attempting a republish.
+# resolves a @chiljs/client whose @chiljs/core is not on the registry yet. A tag
+# makes "this commit is 0.1.0" explicit, and keeps main free to move without
+# every merge attempting a republish.
 on:
   push:
     tags: ['v*']
@@ -12,6 +12,10 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # npm's trusted publisher is registered against this environment, so the
+    # OIDC claim only matches a job that declares it. Without it, any workflow
+    # here asking for `id-token: write` would be a path to the registry.
+    environment: release
     permissions:
       contents: read
       # Required for npm provenance: the signed attestation tying each tarball
@@ -61,5 +65,3 @@ jobs:
             echo "publishing $name@$version"
             npm publish -w "$name" --access public --provenance
           done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
