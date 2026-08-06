@@ -1,6 +1,6 @@
 {
   "name": "@chiljs/server",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Fetch-API request handlers for the CHIL token exchange. Runs on Node, Workers, Deno and Bun.",
   "license": "MIT",
   "type": "module",
@@ -29,7 +29,7 @@
     "prepack": "tsc -b"
   },
   "dependencies": {
-    "@chiljs/core": "0.1.2"
+    "@chiljs/core": "0.1.3"
   },
   "repository": {
     "type": "git",
