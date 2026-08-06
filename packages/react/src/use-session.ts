@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Observable } from '@chiljs/client';
 
 interface Lifecycle<T> extends Observable<T> {
@@ -21,32 +21,36 @@ type StateOf<S> = S extends { getState(): infer T } ? T : never;
  * truth that can tear. This is also why the sessions cache their snapshot —
  * `getState` returning a fresh object each call makes this hook loop forever.
  *
- * The `version` counter exists for remounts. `destroy()` is terminal, so a
- * component that unmounts and mounts again — StrictMode in development, an
- * offscreen tree in production — would otherwise resurrect a dead session.
- * Bumping it in cleanup forces a fresh one on the way back in.
+ * The session is built by the effect that starts it. `destroy()` is terminal
+ * and an effect can be torn down and re-run without the component's state
+ * resetting — StrictMode in development, a hidden tree in production — so each
+ * run needs a session of its own rather than the one the last run killed.
+ *
+ * Building it here rather than in a render-phase memo is what keeps the cleanup
+ * free of state writes. A cleanup that writes a value the effect depends on
+ * schedules the next cleanup, and that has no fixed point.
  */
 export function useSession<S extends Lifecycle<unknown>>(
   create: () => S,
   deps: unknown[],
 ): [S, StateOf<S>] {
-  const [version, setVersion] = useState(0);
-
   // Held in a ref so a caller passing an inline arrow does not rebuild the
   // session on every render.
   const createRef = useRef(create);
   createRef.current = create;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- deps are the caller's
-  const session = useMemo(() => createRef.current(), [...deps, version]);
+  // Seeded during render so the first pass reads a real state rather than a
+  // placeholder. This one is never started; the effect replaces it with the
+  // session it owns, which begins in the same state.
+  const [session, setSession] = useState<S>(() => createRef.current());
 
   useEffect(() => {
-    session.start();
-    return () => {
-      session.destroy();
-      setVersion((v) => v + 1);
-    };
-  }, [session]);
+    const active = createRef.current();
+    setSession(active);
+    active.start();
+    return () => active.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps are the caller's
+  }, deps);
 
   // The cast bridges the constraint and the conditional: `S extends
   // Lifecycle<unknown>` is what lets any session satisfy this, and it is also
