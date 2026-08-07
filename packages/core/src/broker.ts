@@ -107,12 +107,21 @@ export function createBroker(options: BrokerOptions = {}): Broker {
   /**
    * Shared by `check` and `claim`: turns the absence of a live record into the
    * most specific refusal available.
+   *
+   * `claimant` is what separates the sender whose file arrived from a second
+   * browser holding the same used link. Omitting it asks the weaker question —
+   * "was this code spent at all" — which is the only one the panel polling
+   * `check` can ask, since it has no claimant and is not one.
    */
-  async function missing(room: string, secret: string): Promise<ErrorReason> {
+  async function missing(room: string, secret: string, claimant?: string): Promise<ErrorReason> {
     const done = await store.spent(secret);
     // A token this broker actually spent, rather than one it never issued.
-    if (done && done.room === room) return 'already-sent';
-    return 'invalid-token';
+    if (!done || done.room !== room) return 'invalid-token';
+    // A tombstone with no claimant predates the record of one, or belongs to an
+    // upload that never claimed. Neither can contradict the caller, and the
+    // happier reading is the one that was true before this existed.
+    if (claimant === undefined || done.claimedBy === undefined) return 'already-sent';
+    return done.claimedBy === claimant ? 'already-sent' : 'code-used';
   }
 
   async function mint(room: string): Promise<MintResult> {
@@ -126,12 +135,20 @@ export function createBroker(options: BrokerOptions = {}): Broker {
     return { token: formatToken(room, secret), expiresInMs: ttlMs, flow };
   }
 
-  async function check(room: string, secret: string): Promise<Verdict> {
+  /**
+   * The body of `check`, with the caller's identity when there is one.
+   *
+   * Separate so that `check` keeps its two-argument shape. A claimant is
+   * something only a sender has, and an optional third parameter on the public
+   * route would invite the panel to invent one — at which point it stops being
+   * told its own code was used.
+   */
+  async function verdict(room: string, secret: string, claimant?: string): Promise<Verdict> {
     const record = await store.get(secret);
     // A secret that belongs to another room is treated as unknown rather than
     // as a mismatch: saying "wrong room" would confirm the secret exists.
     if (!record || record.room !== room) {
-      return { ok: false, reason: await missing(room, secret) };
+      return { ok: false, reason: await missing(room, secret, claimant) };
     }
     if (record.expiresAt < now()) return { ok: false, reason: 'expired-token' };
     return {
@@ -142,17 +159,21 @@ export function createBroker(options: BrokerOptions = {}): Broker {
     };
   }
 
+  async function check(room: string, secret: string): Promise<Verdict> {
+    return verdict(room, secret);
+  }
+
   async function claim(room: string, secret: string, claimant: string): Promise<ClaimVerdict> {
     // Expiry and tombstones are judged before anything is written, so a dead
     // code is refused with the reason it deserves. The only race this leaves is
     // a token expiring between here and the compare-and-set below, which costs
     // nothing: the record is unreachable either way.
-    const verdict = await check(room, secret);
-    if (!verdict.ok) return verdict;
+    const seen = await verdict(room, secret, claimant);
+    if (!seen.ok) return seen;
 
     const outcome = await store.claim(secret, claimant);
     if (outcome.status === 'missing') {
-      return { ok: false, reason: await missing(room, secret) };
+      return { ok: false, reason: await missing(room, secret, claimant) };
     }
     if (outcome.status === 'conflict') return { ok: false, reason: 'already-claimed' };
     // Re-checked rather than trusted from the verdict above: on a networked

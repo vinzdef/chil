@@ -10,6 +10,7 @@ import {
   createTransport,
   createUploadSession,
   ChilError,
+  type HandoffEvent,
 } from '@chiljs/client';
 import { createRecipient, createSealer, keyFromFragment, memoryKeyStore } from '@chiljs/crypto';
 
@@ -44,10 +45,12 @@ interface BootOptions {
    * place — see the crypto tests.
    */
   inspect?: ((head: Uint8Array) => ErrorReason | null) | null;
+  /** Short-lived codes, for the paths that only a dead token reaches. */
+  ttlMs?: number;
 }
 
 async function boot(options: BootOptions = {}): Promise<Harness> {
-  const broker = createBroker();
+  const broker = createBroker({ ttlMs: options.ttlMs });
   const sink = memorySink();
   const handler = toNodeHandler(
     createHandler({
@@ -415,6 +418,35 @@ test('a session on a spent code lands in sent, not in a broken link', async () =
   session.destroy();
 });
 
+test('a used link opened in a second browser is not shown a success', async () => {
+  const { baseUrl, broker } = await harness();
+  const transport = createTransport({ baseUrl });
+  const { token } = await broker.mint('shop');
+
+  // The whole repro: someone scans, uploads, and the link is opened again
+  // somewhere else — a private window, a forward. The second browser has a
+  // claimant of its own and no memory of an upload, so only the server can tell
+  // the two apart.
+  await transport.claim(token, CLAIMANT_A);
+  await transport.upload({ token, claimant: CLAIMANT_A, body: JPEG, contentType: 'image/jpeg' });
+
+  const session = createUploadSession({ token, transport, claimant: CLAIMANT_B });
+  session.start();
+  const state = await settles(session, (s) => s.phase !== 'checking');
+  assert.equal(state.phase, 'error', 'a browser that sent nothing must not be told it sent');
+  assert.equal(state.reason, 'code-used');
+  assert.equal(state.canRetry, false);
+  session.destroy();
+
+  // And the sender that did the work still gets its own answer back.
+  const sender = createUploadSession({ token, transport, claimant: CLAIMANT_A });
+  sender.start();
+  const sent = await settles(sender, (s) => s.phase !== 'checking');
+  assert.equal(sent.phase, 'sent');
+  assert.equal(sent.reason, null);
+  sender.destroy();
+});
+
 test('a session on a code someone else holds lands in error', async () => {
   const { baseUrl, broker } = await harness();
   const transport = createTransport({ baseUrl });
@@ -427,6 +459,42 @@ test('a session on a code someone else holds lands in error', async () => {
   assert.equal(state.phase, 'error');
   assert.equal(state.reason, 'already-claimed');
   assert.equal(state.canRetry, false, 'only a fresh code helps here');
+  session.destroy();
+});
+
+test('a code the server calls expired lands in expired, not in invalid', async () => {
+  // The record outlives its own validity by the grace window, and that window
+  // exists for exactly one purpose: so the refusal can say `expired-token`. A
+  // client that collapses it into `invalid` throws the distinction away and
+  // tells someone whose code merely aged out that their link was never real.
+  const { baseUrl, broker } = await harness({ ttlMs: 20 });
+  const transport = createTransport({ baseUrl });
+  const events: HandoffEvent[] = [];
+
+  const session = createHandoffSession({
+    // A duration long enough that the local expiry timer cannot fire, so the
+    // server's answer is the only thing left to retire the code. That is the
+    // case this covers: a device whose clock disagrees with the server's, or
+    // one asleep through its own deadline.
+    mint: async () => ({ ...(await broker.mint('shop')), expiresInMs: 60_000 }),
+    transport,
+    pollMs: 10,
+    onEvent: (event) => events.push(event),
+  });
+  session.start();
+
+  const state = await new Promise<ReturnType<typeof session.getState>>((resolve) => {
+    const check = (): void => {
+      const current = session.getState();
+      if (current.dead) resolve(current);
+    };
+    session.subscribe(check);
+    check();
+  });
+
+  assert.equal(state.phase, 'expired');
+  // Once, not once per poll still in flight when the code died.
+  assert.equal(events.filter((event) => event.type === 'expired').length, 1);
   session.destroy();
 });
 

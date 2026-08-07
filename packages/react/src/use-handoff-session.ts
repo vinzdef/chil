@@ -36,7 +36,7 @@ export interface UseHandoffSession extends HandoffState {
  * to close the panel.
  */
 export function useHandoffSession(options: UseHandoffSessionOptions): UseHandoffSession {
-  const { mint, transport, buildUrl, pollMs } = options;
+  const { mint, transport, pollMs } = options;
 
   const onEvent = useRef(options.onEvent);
   onEvent.current = options.onEvent;
@@ -44,19 +44,38 @@ export function useHandoffSession(options: UseHandoffSessionOptions): UseHandoff
   const mintRef = useRef(mint);
   mintRef.current = mint;
 
-  const [session, state] = useSession(
-    () =>
-      createHandoffSession({
-        // Through a ref: a caller writing `mint={() => fetch(...)}` inline
-        // would otherwise mint a new code on every render.
-        mint: (signal) => mintRef.current(signal),
-        transport,
-        buildUrl,
-        pollMs,
-        onEvent: (event) => onEvent.current?.(event),
-      }),
-    [transport, buildUrl, pollMs],
-  );
+  const buildUrlRef = useRef(options.buildUrl);
+  buildUrlRef.current = options.buildUrl;
+
+  // *Whether* a builder was supplied is a dependency; *which* builder it is, is
+  // not. Passing a wrapper unconditionally would override the session's own
+  // default, and the shape of the default URL belongs there.
+  const custom = options.buildUrl !== undefined;
+
+  const [session, state] = useSession(() => {
+    // The builder in force when this session was made. A wrapper outliving the
+    // prop that justified it still has something to call.
+    const atCreation = buildUrlRef.current;
+    return createHandoffSession({
+      // Every callback reaches the session through a ref. A caller writing one
+      // of these inline — `mint={() => fetch(...)}`, `buildUrl={(t) =>
+      // handoffUrl({ token: t })}` — hands over a new identity on every render,
+      // and a dependency that changes every render rebuilds the session on
+      // every render.
+      mint: (signal) => mintRef.current(signal),
+      transport,
+      // Held this way, a genuinely changed builder also leaves the code on
+      // screen alone and applies at the next mint, which is how `mint` itself
+      // already behaves: swapping a callback is not a reason to discard a live
+      // code and make someone read a new one off the screen.
+      buildUrl:
+        atCreation === undefined
+          ? undefined
+          : (token: string) => (buildUrlRef.current ?? atCreation)(token),
+      pollMs,
+      onEvent: (event) => onEvent.current?.(event),
+    });
+  }, [transport, custom, pollMs]);
 
   const regenerate = useCallback(() => session.regenerate(), [session]);
 

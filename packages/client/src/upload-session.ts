@@ -148,9 +148,16 @@ export function createUploadSession(options: UploadSessionOptions): UploadSessio
         const reason = reasonOf(err);
         emit({ type: 'claim-failed', reason });
 
-        // A reload after a successful send. The file arrived, so say so —
-        // reporting a broken link here would report a failure that never
-        // happened.
+        // A reload after a successful send *by this browser*. The file arrived,
+        // so say so — reporting a broken link here would report a failure that
+        // never happened.
+        //
+        // The server is what separates this from the same link opened
+        // elsewhere, by comparing the claimant against the one that spent the
+        // code; that case arrives as `code-used` and falls through to the error
+        // below, where a dead link belongs. Nothing on this device could tell
+        // the two apart: a fresh browser has a fresh claimant and no memory of
+        // an upload either way.
         if (reason === 'already-sent') {
           store.set({ phase: 'sent', reason: null, progress: 1 });
           return;

@@ -42,6 +42,7 @@ interface Probe {
   /** Bumped by the component itself, so a render loop shows up as a number. */
   renders: number;
   phase: string | null;
+  url: string | null;
 }
 
 /**
@@ -52,7 +53,7 @@ interface Probe {
  * stall the run instead of reporting.
  */
 async function mount(render: (probe: Probe) => ReactElement): Promise<Probe> {
-  const probe: Probe = { renders: 0, phase: null };
+  const probe: Probe = { renders: 0, phase: null, url: null };
   const container = dom.window.document.createElement('div');
   dom.window.document.body.appendChild(container);
   const root = createRoot(container);
@@ -87,6 +88,33 @@ test('a handoff consumer settles under StrictMode', { timeout: 10_000 }, async (
   // The session that ends up on screen must be a live one. Settling by never
   // starting anything would pass the count above and ship a dead hook.
   assert.equal(probe.phase, 'live');
+});
+
+test('an inline buildUrl does not rebuild the session', { timeout: 10_000 }, async () => {
+  function Consumer({ probe }: { probe: Probe }): null {
+    probe.renders += 1;
+    const session = useHandoffSession({
+      mint,
+      transport,
+      pollMs: 60_000,
+      // Written at the call site, so its identity is new on every render. Every
+      // other callback this hook takes is held in a ref for exactly this
+      // reason; one that is a dependency instead rebuilds the session each
+      // render, and each rebuild renders again.
+      buildUrl: (token) => `https://sender.test/u?t=${token}`,
+    });
+    probe.phase = session.phase;
+    probe.url = session.url;
+    return null;
+  }
+
+  const probe = await mount((p) => createElement(Consumer, { probe: p }));
+
+  assert.ok(probe.renders < 50, `rendered ${probe.renders} times`);
+  assert.equal(probe.phase, 'live');
+  // The builder is used, not merely tolerated: a ref that nothing calls would
+  // pass every assertion above.
+  assert.equal(probe.url, `https://sender.test/u?t=${TOKEN}`);
 });
 
 test('an upload consumer settles under StrictMode', { timeout: 10_000 }, async () => {

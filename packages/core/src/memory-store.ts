@@ -44,7 +44,7 @@ export function memoryStore(): TokenStore {
       const record = live.get(secret);
       if (!record) return false;
       live.delete(secret);
-      spent.set(secret, { room: record.room, spentAt });
+      spent.set(secret, { room: record.room, spentAt, claimedBy: record.claimedBy });
       return true;
     },
 

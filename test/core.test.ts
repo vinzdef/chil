@@ -110,6 +110,64 @@ test('a spent token reports already-sent, not invalid-token', async () => {
   );
 });
 
+test('a used link opened by someone else is not told the file arrived', async () => {
+  const broker = createBroker();
+  const { token } = await broker.mint('shop');
+  const { room, secret } = parseToken(token)!;
+
+  await broker.claim(room, secret, CLAIMANT_A);
+  await broker.consume(secret);
+
+  const other = await broker.claim(room, secret, CLAIMANT_B);
+  assert.equal(
+    !other.ok && other.reason,
+    'code-used',
+    'a second browser must not be shown a delivery it never made',
+  );
+});
+
+test('the sender that spent the code still gets its success back', async () => {
+  const broker = createBroker();
+  const { token } = await broker.mint('shop');
+  const { room, secret } = parseToken(token)!;
+
+  await broker.claim(room, secret, CLAIMANT_A);
+  await broker.consume(secret);
+
+  // The upload landed and the reply did not. This is the case the whole
+  // tombstone exists for, and separating the second browser out must not cost
+  // the first one its answer.
+  const again = await broker.claim(room, secret, CLAIMANT_A);
+  assert.equal(!again.ok && again.reason, 'already-sent');
+});
+
+test('the panel polling check is still told its code was used', async () => {
+  const broker = createBroker();
+  const { token } = await broker.mint('shop');
+  const { room, secret } = parseToken(token)!;
+
+  await broker.claim(room, secret, CLAIMANT_A);
+  await broker.consume(secret);
+
+  // `check` names no claimant and is not one: the panel asks whether the code
+  // it is displaying was spent, and the answer is yes whoever spent it.
+  const verdict = await broker.check(room, secret);
+  assert.equal(!verdict.ok && verdict.reason, 'already-sent');
+});
+
+test('a token spent without a claim answers everyone the same', async () => {
+  const broker = createBroker();
+  const { token } = await broker.mint('shop');
+  const { room, secret } = parseToken(token)!;
+
+  // An upload that skipped the page never claimed, so the tombstone has nobody
+  // to compare against and cannot start refusing the sender its own success.
+  await broker.consume(secret);
+
+  const sender = await broker.claim(room, secret, CLAIMANT_A);
+  assert.equal(!sender.ok && sender.reason, 'already-sent');
+});
+
 test('a token this broker never issued is invalid, not already-sent', async () => {
   const broker = createBroker();
   const verdict = await broker.check('shop', 'never-issued-0123456789');
@@ -176,10 +234,30 @@ test('exactly one of many simultaneous claims wins', async () => {
   assert.equal(results.filter((r) => r.ok && r.first).length, 1);
 });
 
+test('a tombstone carrying a claimant still ages out', async () => {
+  let clock = 1_000_000;
+  const broker = createBroker({ spentTtlMs: 60_000, now: () => clock });
+  const { token } = await broker.mint('shop');
+  const { room, secret } = parseToken(token)!;
+
+  await broker.claim(room, secret, CLAIMANT_A);
+  await broker.consume(secret);
+
+  clock += 120_000;
+  await broker.sweep();
+  const verdict = await broker.claim(room, secret, CLAIMANT_B);
+  assert.equal(
+    !verdict.ok && verdict.reason,
+    'invalid-token',
+    'the extra field must not keep a tombstone alive past its own clock',
+  );
+});
+
 test('retryable separates a dropped connection from a verdict', () => {
   assert.equal(retryable['server-error'], true);
   assert.equal(retryable['storage-full'], true);
   assert.equal(retryable['already-sent'], false);
+  assert.equal(retryable['code-used'], false);
   assert.equal(retryable['already-claimed'], false);
   assert.equal(retryable['expired-token'], false);
 });

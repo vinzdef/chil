@@ -140,6 +140,42 @@ export const storeChecks: StoreCheck[] = [
   },
 
   {
+    name: 'the tombstone remembers who spent the code',
+    async run(store) {
+      const written = record();
+      await store.put(written);
+      await store.claim(written.secret, 'claimant-0123456789ab');
+      await store.consume(written.secret, Date.now());
+
+      const tomb = await store.spent(written.secret);
+      assert(tomb !== null, 'a spent token must leave a tombstone');
+      // Dropping this is what makes a used link tell a second browser that its
+      // file arrived: the live record knew, and consume is the last place that
+      // knowledge exists.
+      assert(
+        tomb.claimedBy === 'claimant-0123456789ab',
+        'the tombstone must carry the claimant over from the record it replaces',
+      );
+    },
+  },
+
+  {
+    name: 'a token spent without a claim leaves a tombstone with no claimant',
+    async run(store) {
+      const written = record();
+      await store.put(written);
+      await store.consume(written.secret, Date.now());
+
+      const tomb = await store.spent(written.secret);
+      assert(tomb !== null, 'a spent token must leave a tombstone');
+      // Not an oversight to paper over: an upload that skipped the page never
+      // claimed, and inventing a claimant here would refuse the sender its own
+      // success.
+      assert(tomb.claimedBy === undefined, 'an unclaimed token must not invent a claimant');
+    },
+  },
+
+  {
     name: 'an unspent token has no tombstone',
     async run(store) {
       const written = record();

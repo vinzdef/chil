@@ -181,11 +181,29 @@ export type ErrorReason =
   | 'bad-request'
   | 'invalid-token'
   /**
-   * The token was spent by a real upload. A refusal, but a happy one: the file
-   * arrived. Separated from `invalid-token` so someone reloading the page after
-   * sending is told what happened rather than that their link broke.
+   * The token was spent by a real upload, *by the browser being answered*. A
+   * refusal, but a happy one: the file arrived. Separated from `invalid-token`
+   * so someone reloading the page after sending is told what happened rather
+   * than that their link broke.
+   *
+   * Only ever said to the sender that spent it, or to a caller that named no
+   * claimant at all — the panel polling `check` about its own code. Anyone else
+   * gets `code-used`.
    */
   | 'already-sent'
+  /**
+   * The code was spent, but by somebody else.
+   *
+   * A used link opened a second time: forwarded, or reopened in another
+   * browser. Distinct from `already-sent`, which promises *your* file arrived,
+   * and saying that to a second browser claims a delivery it never made.
+   *
+   * Named for the state rather than the actor, and deliberately not
+   * `already-spent`: one letter from `already-sent`, for the two reasons that
+   * most need telling apart, is exactly the kind of thing that reads correct
+   * and behaves wrong.
+   */
+  | 'code-used'
   /**
    * A different browser already claimed this code.
    *
@@ -225,6 +243,9 @@ export const retryable: Record<ErrorReason, boolean> = {
   'bad-request': false,
   'invalid-token': false,
   'already-sent': false,
+  // Nothing brings a spent code back, least of all for the browser that did not
+  // spend it.
+  'code-used': false,
   // Retrying cannot help: the code belongs to another browser now, and only a
   // fresh code changes that.
   'already-claimed': false,
@@ -254,6 +275,7 @@ export function statusFor(reason: ErrorReason): number {
       return 400;
     case 'invalid-token':
     case 'already-sent':
+    case 'code-used':
     case 'already-claimed':
     case 'expired-token':
       return 403;

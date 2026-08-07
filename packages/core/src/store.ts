@@ -28,6 +28,19 @@ export interface TokenRecord {
 export interface SpentRecord {
   room: string;
   spentAt: number;
+  /**
+   * The browser that held the code when it was spent, carried over from the
+   * live record.
+   *
+   * Without it a spent token cannot be told from a spent token opened by
+   * somebody else, and the second browser is shown the first one's success. It
+   * is written here rather than derived later because this is the last moment
+   * it is known: `consume` deletes the live record that holds it.
+   *
+   * Undefined for a token spent by an upload that never claimed, and for a
+   * tombstone written before a store began recording it.
+   */
+  claimedBy?: string;
 }
 
 export type StoreClaim =

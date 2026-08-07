@@ -152,17 +152,20 @@ export function createHandoffSession(options: HandoffSessionOptions): HandoffSes
     poll = setInterval(() => {
       void transport.check(token, controller.signal).then(
         (state) => {
-          if (destroyed || store.getState().token !== token) return;
+          const current = store.getState();
+          // A settled code is settled. A reply in flight when it died describes
+          // the code it was sent about, not the panel's next move, and acting on
+          // it would revive something already retired.
+          if (destroyed || current.token !== token || current.dead) return;
           // A claim says a sender has taken it, which is worth showing but
           // changes nothing about the code itself. Polling continues.
           const claimed = state.claimed;
-          const previous = store.getState().phase;
           store.set({ phase: claimed ? 'claimed' : 'live' });
           const { flow } = store.getState();
-          if (claimed && previous !== 'claimed' && flow) emit({ type: 'claimed', flow });
+          if (claimed && current.phase !== 'claimed' && flow) emit({ type: 'claimed', flow });
         },
         (err: unknown) => {
-          if (destroyed || store.getState().token !== token) return;
+          if (destroyed || store.getState().token !== token || store.getState().dead) return;
           const reason: ErrorReason = err instanceof ChilError ? err.reason : 'server-error';
           // Only a verdict on the token retires the code. A request that never
           // arrived says the link is flaky, not that the code was used —
@@ -178,6 +181,15 @@ export function createHandoffSession(options: HandoffSessionOptions): HandoffSes
             // claiming a file that never arrived.
             settle('received');
             if (flow) emit({ type: 'received', flow });
+            return;
+          }
+          if (reason === 'expired-token') {
+            // The server keeps an expired record for its grace window purely so
+            // it can answer this rather than `invalid-token`, and the panel owes
+            // the two different words: a code that aged out earns "generate
+            // another", a link that was never real does not.
+            settle('expired');
+            if (flow) emit({ type: 'expired', flow });
             return;
           }
           settle('invalid');
