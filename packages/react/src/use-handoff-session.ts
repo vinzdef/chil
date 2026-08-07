@@ -4,6 +4,7 @@ import {
   type MintResult,
   type HandoffEvent,
   type HandoffState,
+  type RecipientLike,
   type Transport,
 } from '@chiljs/client';
 import { useSession } from './use-session.js';
@@ -13,6 +14,15 @@ export interface UseHandoffSessionOptions {
   mint: (signal?: AbortSignal) => Promise<MintResult>;
   transport: Transport;
   buildUrl?: (token: string) => string;
+  /**
+   * Puts this device's public key in the URL fragment, so the sender can seal
+   * the upload to it. See `useRecipient`, and `@chiljs/crypto`.
+   *
+   * Ignored when `buildUrl` is supplied — build the fragment yourself with
+   * `handoffUrl({ fragment: { k: recipient.publicKey } })`, or the key silently
+   * stops travelling and the uploads arrive in the clear.
+   */
+  recipient?: RecipientLike;
   pollMs?: number;
   onEvent?: (event: HandoffEvent) => void;
 }
@@ -36,7 +46,7 @@ export interface UseHandoffSession extends HandoffState {
  * to close the panel.
  */
 export function useHandoffSession(options: UseHandoffSessionOptions): UseHandoffSession {
-  const { mint, transport, pollMs } = options;
+  const { mint, transport, recipient, pollMs } = options;
 
   const onEvent = useRef(options.onEvent);
   onEvent.current = options.onEvent;
@@ -72,10 +82,16 @@ export function useHandoffSession(options: UseHandoffSessionOptions): UseHandoff
         atCreation === undefined
           ? undefined
           : (token: string) => (buildUrlRef.current ?? atCreation)(token),
+      recipient,
       pollMs,
       onEvent: (event) => onEvent.current?.(event),
     });
-  }, [transport, custom, pollMs]);
+    // The key itself is the dependency, not the handle carrying it. A ref would
+    // be the wrong instrument here: what a ref buys is immunity to identity
+    // churn, and the payload is a string, so there is none to be immune to. The
+    // key must reach the screen, because a code displayed with a stale fragment
+    // is a code whose uploads seal to a key this device may no longer hold.
+  }, [transport, custom, recipient?.publicKey, pollMs]);
 
   const regenerate = useCallback(() => session.regenerate(), [session]);
 

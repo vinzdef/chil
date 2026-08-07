@@ -17,6 +17,8 @@ export {
   handoffUrl,
   type ErrorReason,
   type MintResult,
+  type RecipientLike,
+  type SealerLike,
   type HandoffEvent,
   type HandoffPhase,
   type HandoffState,

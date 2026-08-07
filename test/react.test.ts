@@ -19,7 +19,7 @@ Object.defineProperty(globalThis, 'navigator', {
 });
 globals.IS_REACT_ACT_ENVIRONMENT = true;
 
-const { act, createElement, StrictMode } = await import('react');
+const { act, createElement, StrictMode, useEffect, useState } = await import('react');
 const { createRoot } = await import('react-dom/client');
 const { useHandoffSession, useUploadSession } = await import('@chiljs/react');
 
@@ -34,6 +34,43 @@ const transport: Transport = {
   check: async () => ({ ok: true, claimed: false }),
   claim: async () => ({ ok: true, flow: 'flow-1', first: true }),
   upload: async () => ({ id: 'file-1', size: 16 }),
+};
+
+/** Records what reached the wire, so a test can assert what was sent, not only what was said. */
+interface Wire {
+  claims: number;
+  uploads: { body: unknown; label?: string; contentType?: string }[];
+}
+
+function recordingTransport(): [Transport, Wire] {
+  const wire: Wire = { claims: 0, uploads: [] };
+  return [
+    {
+      check: async () => ({ ok: true, claimed: false }),
+      claim: async () => {
+        wire.claims += 1;
+        return { ok: true, flow: 'flow-1', first: wire.claims === 1 };
+      },
+      upload: async (args) => {
+        wire.uploads.push({
+          body: args.body,
+          label: args.label,
+          contentType: args.contentType,
+        });
+        return { id: 'file-1', size: 16 };
+      },
+    },
+    wire,
+  ];
+}
+
+/** Stands in for `createSealer`, without the cipher: prefixing is enough to prove it ran. */
+const sealer = {
+  encrypt: async (data: Uint8Array | ArrayBuffer | Blob) => {
+    const bytes = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+    return Uint8Array.from([0xff, ...bytes]);
+  },
+  encryptText: async (text: string) => `sealed:${text}`,
 };
 
 const mint = async () => ({ token: TOKEN, expiresInMs: 60_000, flow: 'flow-1' });
@@ -117,6 +154,32 @@ test('an inline buildUrl does not rebuild the session', { timeout: 10_000 }, asy
   assert.equal(probe.url, `https://sender.test/u?t=${TOKEN}`);
 });
 
+test('a recipient rides in the URL fragment', { timeout: 10_000 }, async () => {
+  function Consumer({ probe }: { probe: Probe }): null {
+    probe.renders += 1;
+    const session = useHandoffSession({
+      mint,
+      transport,
+      pollMs: 60_000,
+      // A fresh handle each render, as `useRecipient` would hand back after any
+      // parent re-render. Only the key inside it is a dependency.
+      recipient: { publicKey: 'PUBKEY' },
+    });
+    probe.phase = session.phase;
+    probe.url = session.url;
+    return null;
+  }
+
+  const probe = await mount((p) => createElement(Consumer, { probe: p }));
+
+  assert.ok(probe.renders < 50, `rendered ${probe.renders} times`);
+  assert.equal(probe.phase, 'live');
+  // The fragment, not the query string: a browser never sends `#…` to the
+  // server, which is the whole reason the key can travel this way.
+  assert.ok(probe.url?.includes('#k=PUBKEY'), `url was ${probe.url}`);
+  assert.ok(!probe.url?.includes('?k=') && !probe.url?.includes('&k='), `url was ${probe.url}`);
+});
+
 test('an upload consumer settles under StrictMode', { timeout: 10_000 }, async () => {
   function Consumer({ probe }: { probe: Probe }): null {
     probe.renders += 1;
@@ -129,4 +192,98 @@ test('an upload consumer settles under StrictMode', { timeout: 10_000 }, async (
 
   assert.ok(probe.renders < 50, `rendered ${probe.renders} times`);
   assert.equal(probe.phase, 'ready');
+});
+
+test('a sealer encrypts the body and the label', { timeout: 10_000 }, async () => {
+  const [recording, wire] = recordingTransport();
+
+  function Consumer({ probe }: { probe: Probe }): null {
+    probe.renders += 1;
+    const session = useUploadSession({ token: TOKEN, transport: recording, seal: sealer });
+    probe.phase = session.phase;
+    // Sent from an effect once the claim has landed, which is where a form's
+    // submit handler would sit. `send` refuses from any phase but `ready` and
+    // `error`, so StrictMode's second run is a no-op rather than a second file.
+    useEffect(() => {
+      if (session.phase === 'ready') session.send(Uint8Array.from([1, 2, 3]), { label: 'photo.jpg' });
+    }, [session, session.phase]);
+    return null;
+  }
+
+  const probe = await mount((p) => createElement(Consumer, { probe: p }));
+
+  assert.ok(probe.renders < 50, `rendered ${probe.renders} times`);
+  assert.equal(wire.uploads.length, 1);
+  const [sent] = wire.uploads;
+  assert.deepEqual(sent.body, Uint8Array.from([0xff, 1, 2, 3]));
+  assert.equal(sent.label, 'sealed:photo.jpg');
+  // Ciphertext is not a JPEG, and saying so would be a lie the recipient acts on.
+  assert.equal(sent.contentType, 'application/octet-stream');
+  assert.equal(probe.phase, 'sent');
+});
+
+test('a sealer arriving late does not lose the code', { timeout: 10_000 }, async () => {
+  const [recording, wire] = recordingTransport();
+
+  function Consumer({ probe }: { probe: Probe }): null {
+    probe.renders += 1;
+    // Built asynchronously, as `createSealer` is, and rebuilt at the call site
+    // on every render afterwards — the identity churn a ref exists to absorb.
+    const [ready, setReady] = useState(false);
+    useEffect(() => {
+      const timer = setTimeout(() => setReady(true), 10);
+      return () => clearTimeout(timer);
+    }, []);
+    const session = useUploadSession({
+      token: TOKEN,
+      transport: recording,
+      seal: ready ? { ...sealer } : undefined,
+    });
+    probe.phase = session.phase;
+    useEffect(() => {
+      if (session.phase === 'ready' && ready) session.send(Uint8Array.from([1, 2, 3]));
+    }, [session, session.phase, ready]);
+    return null;
+  }
+
+  const probe = await mount((p) => createElement(Consumer, { probe: p }));
+
+  assert.ok(probe.renders < 50, `rendered ${probe.renders} times`);
+  // The sealer took effect even though it did not exist when the session was
+  // built; the file must not go out in the clear because the key was slow.
+  assert.equal(wire.uploads.length, 1);
+  assert.deepEqual(wire.uploads[0]?.body, Uint8Array.from([0xff, 1, 2, 3]));
+  // Churn is absorbed: the arrival costs one rebuild under StrictMode's double
+  // mount, not one per render.
+  assert.ok(wire.claims <= 6, `claimed ${wire.claims} times`);
+});
+
+test('requireSeal refuses to send in the clear', { timeout: 10_000 }, async () => {
+  const [recording, wire] = recordingTransport();
+  let reason: string | null = null;
+
+  function Consumer({ probe }: { probe: Probe }): null {
+    probe.renders += 1;
+    // The fragment was stripped in transit — by a link rewriter, a chat preview
+    // generator, a shortener — so the page has nothing to seal with.
+    const session = useUploadSession({
+      token: TOKEN,
+      transport: recording,
+      requireSeal: true,
+    });
+    probe.phase = session.phase;
+    reason = session.reason;
+    useEffect(() => {
+      if (session.phase === 'ready') session.send(Uint8Array.from([1, 2, 3]));
+    }, [session, session.phase]);
+    return null;
+  }
+
+  const probe = await mount((p) => createElement(Consumer, { probe: p }));
+
+  assert.ok(probe.renders < 50, `rendered ${probe.renders} times`);
+  assert.equal(probe.phase, 'error');
+  assert.equal(reason, 'seal-required');
+  // Refused before anything left the device, not after the file was uploaded.
+  assert.equal(wire.uploads.length, 0);
 });

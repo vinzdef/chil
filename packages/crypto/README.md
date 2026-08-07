@@ -15,6 +15,7 @@ useUploadSession({
   token,
   transport,
   seal: key ? await createSealer(key) : undefined,
+  requireSeal: true, // a stripped fragment must fail, not downgrade to plaintext
 });
 
 // Dashboard.
