@@ -1,6 +1,6 @@
 {
   "name": "@chiljs/core",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Protocol, token broker and store contract for CHIL, a single-use token handoff. Zero dependencies, isomorphic.",
   "license": "MIT",
   "type": "module",
