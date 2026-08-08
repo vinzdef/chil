@@ -13,14 +13,17 @@ export interface UseHandoffSessionOptions {
   /** Calls your authenticated mint endpoint. See `createMintHandler`. */
   mint: (signal?: AbortSignal) => Promise<MintResult>;
   transport: Transport;
-  buildUrl?: (token: string) => string;
+  /** Defaults to `location.origin`. */
+  origin?: string;
+  /** The page that reads the token and does the upload. Defaults to `/`. */
+  path?: string;
+  /** Extra query values — a debug flag, a locale. The server sees these. */
+  params?: Record<string, string>;
+  /** Extra fragment values. The server never sees these. `k` is reserved. */
+  fragment?: Record<string, string>;
   /**
    * Puts this device's public key in the URL fragment, so the sender can seal
    * the upload to it. See `useRecipient`, and `@chiljs/crypto`.
-   *
-   * Ignored when `buildUrl` is supplied — build the fragment yourself with
-   * `handoffUrl({ fragment: { k: recipient.publicKey } })`, or the key silently
-   * stops travelling and the uploads arrive in the clear.
    */
   recipient?: RecipientLike;
   pollMs?: number;
@@ -30,6 +33,17 @@ export interface UseHandoffSessionOptions {
 export interface UseHandoffSession extends HandoffState {
   /** Mints a fresh code. The current one is not revoked; it simply ages out. */
   regenerate: () => void;
+}
+
+/**
+ * A record's *contents* as a dependency, since its identity is not one.
+ *
+ * These are written inline at the call site, so a new object arrives on every
+ * render, and a dependency that changes every render mints a code every render.
+ * Sorted, or key order alone puts a fresh code on the screen.
+ */
+function stable(record: Record<string, string> | undefined): string {
+  return record ? JSON.stringify(Object.entries(record).sort()) : '';
 }
 
 /**
@@ -46,7 +60,7 @@ export interface UseHandoffSession extends HandoffState {
  * to close the panel.
  */
 export function useHandoffSession(options: UseHandoffSessionOptions): UseHandoffSession {
-  const { mint, transport, recipient, pollMs } = options;
+  const { mint, transport, origin, path, params, fragment, recipient, pollMs } = options;
 
   const onEvent = useRef(options.onEvent);
   onEvent.current = options.onEvent;
@@ -54,44 +68,30 @@ export function useHandoffSession(options: UseHandoffSessionOptions): UseHandoff
   const mintRef = useRef(mint);
   mintRef.current = mint;
 
-  const buildUrlRef = useRef(options.buildUrl);
-  buildUrlRef.current = options.buildUrl;
-
-  // *Whether* a builder was supplied is a dependency; *which* builder it is, is
-  // not. Passing a wrapper unconditionally would override the session's own
-  // default, and the shape of the default URL belongs there.
-  const custom = options.buildUrl !== undefined;
-
-  const [session, state] = useSession(() => {
-    // The builder in force when this session was made. A wrapper outliving the
-    // prop that justified it still has something to call.
-    const atCreation = buildUrlRef.current;
-    return createHandoffSession({
-      // Every callback reaches the session through a ref. A caller writing one
-      // of these inline — `mint={() => fetch(...)}`, `buildUrl={(t) =>
-      // handoffUrl({ token: t })}` — hands over a new identity on every render,
-      // and a dependency that changes every render rebuilds the session on
-      // every render.
-      mint: (signal) => mintRef.current(signal),
-      transport,
-      // Held this way, a genuinely changed builder also leaves the code on
-      // screen alone and applies at the next mint, which is how `mint` itself
-      // already behaves: swapping a callback is not a reason to discard a live
-      // code and make someone read a new one off the screen.
-      buildUrl:
-        atCreation === undefined
-          ? undefined
-          : (token: string) => (buildUrlRef.current ?? atCreation)(token),
-      recipient,
-      pollMs,
-      onEvent: (event) => onEvent.current?.(event),
-    });
-    // The key itself is the dependency, not the handle carrying it. A ref would
-    // be the wrong instrument here: what a ref buys is immunity to identity
-    // churn, and the payload is a string, so there is none to be immune to. The
-    // key must reach the screen, because a code displayed with a stale fragment
-    // is a code whose uploads seal to a key this device may no longer hold.
-  }, [transport, custom, recipient?.publicKey, pollMs]);
+  const [session, state] = useSession(
+    () =>
+      createHandoffSession({
+        // `mint` reaches the session through a ref. A caller writing it inline —
+        // `mint={() => fetch(...)}` — hands over a new identity on every render,
+        // and a dependency that changes every render rebuilds the session on
+        // every render.
+        mint: (signal) => mintRef.current(signal),
+        transport,
+        origin,
+        path,
+        params,
+        fragment,
+        recipient,
+        pollMs,
+        onEvent: (event) => onEvent.current?.(event),
+      }),
+    // The URL's *values* are the dependencies, not the handles carrying them. A
+    // ref would be the wrong instrument: what a ref buys is immunity to identity
+    // churn, and these are strings. They must reach the screen, because a code
+    // displayed with a stale fragment is a code whose uploads seal to a key this
+    // device may no longer hold.
+    [transport, origin, path, stable(params), stable(fragment), recipient?.publicKey, pollMs],
+  );
 
   const regenerate = useCallback(() => session.regenerate(), [session]);
 

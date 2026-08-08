@@ -165,7 +165,13 @@ function uploadWithProgress(url: string, args: UploadArgs, type: string): Promis
 export interface HandoffUrlOptions {
   /** Defaults to `location.origin`. */
   origin?: string;
-  /** The page that reads the token and does the upload. */
+  /**
+   * The page that reads the token and does the upload. Defaults to `/`.
+   *
+   * A default of `/` rather than a guess at your routing: where that page lives
+   * is an application's decision, and a library that picks for it is wrong more
+   * often than it is right.
+   */
   path?: string;
   token: string;
   /** Anything else the page should carry through — a debug flag, a locale. */
@@ -199,7 +205,7 @@ export interface HandoffUrlOptions {
  */
 export function handoffUrl({
   origin,
-  path = '/upload',
+  path = '/',
   token,
   params,
   fragment,

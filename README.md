@@ -189,6 +189,11 @@ yours. `url` is a plain string — get it to the sender however suits, whether
 that is a QR library you already use or a link you send. Shipping a renderer
 would make this an opinionated UI package instead of a protocol one.
 
+That string is `<origin><path>?token=…`, and `path` defaults to `/`, so pass the
+page that does the upload: `path: '/send'`. `origin`, `params` and `fragment` are
+there too, for a different host, a debug flag, a locale. For a shape they cannot
+express — a hash router, a shortener — transform `url` where you render it.
+
 > **Not React?** Good. `createUploadSession` and `createHandoffSession` in `@chiljs/client` are
 > plain objects with `getState` / `subscribe`, which is all `useSyncExternalStore`
 > and every other framework's equivalent need.
@@ -227,6 +232,11 @@ useHandoffSession({ mint, transport, recipient }); // key rides in #k=
 useUploadSession({ token, transport, seal, requireSeal: true }); // seals inside send()
 createHandler({ broker, sink, inspect: sealedOnly() }); // server refuses plaintext
 ```
+
+Where the key sits is the session's decision, not an option: the token goes in
+the query because the sender's page reads it back, the key goes in the fragment
+because a browser never sends one to the server. A URL you rewrite by hand is the
+one way to lose it, which is why the check below exists.
 
 **In an encrypted deployment, plaintext must never be accepted — so the server
 enforces it.**

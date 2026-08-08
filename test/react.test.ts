@@ -127,18 +127,21 @@ test('a handoff consumer settles under StrictMode', { timeout: 10_000 }, async (
   assert.equal(probe.phase, 'live');
 });
 
-test('an inline buildUrl does not rebuild the session', { timeout: 10_000 }, async () => {
+test('inline url options do not rebuild the session', { timeout: 10_000 }, async () => {
   function Consumer({ probe }: { probe: Probe }): null {
     probe.renders += 1;
     const session = useHandoffSession({
       mint,
       transport,
       pollMs: 60_000,
-      // Written at the call site, so its identity is new on every render. Every
-      // other callback this hook takes is held in a ref for exactly this
-      // reason; one that is a dependency instead rebuilds the session each
-      // render, and each rebuild renders again.
-      buildUrl: (token) => `https://sender.test/u?t=${token}`,
+      // Written at the call site, so a new object arrives on every render. The
+      // contents are the dependency; the identity is not. Depending on the
+      // object itself mints a code each render, and each mint renders again.
+      origin: 'https://send.test',
+      path: '/hand-off',
+      params: { debug: '1' },
+      fragment: { locale: 'it' },
+      recipient: { publicKey: 'PUBKEY' },
     });
     probe.phase = session.phase;
     probe.url = session.url;
@@ -149,9 +152,12 @@ test('an inline buildUrl does not rebuild the session', { timeout: 10_000 }, asy
 
   assert.ok(probe.renders < 50, `rendered ${probe.renders} times`);
   assert.equal(probe.phase, 'live');
-  // The builder is used, not merely tolerated: a ref that nothing calls would
+  // The options are used, not merely tolerated: a hook that ignored them would
   // pass every assertion above.
-  assert.equal(probe.url, `https://sender.test/u?t=${TOKEN}`);
+  assert.equal(
+    probe.url,
+    `https://send.test/hand-off?token=${TOKEN}&debug=1#locale=it&k=PUBKEY`,
+  );
 });
 
 test('a recipient rides in the URL fragment', { timeout: 10_000 }, async () => {

@@ -609,6 +609,70 @@ test('the handoff url carries the key in its fragment, so the mint never sees it
   handoff.destroy();
 });
 
+test('the url carries the caller\'s own values without displacing the key', async () => {
+  const { baseUrl, broker } = await harness();
+  const transport = createTransport({ baseUrl });
+  const recipient = await createRecipient({ store: memoryKeyStore() });
+
+  // Every one of these used to require replacing the whole builder, and
+  // replacing the builder is how the key went missing.
+  const handoff = createHandoffSession({
+    mint: () => broker.mint('shop'),
+    transport,
+    origin: 'https://send.test',
+    path: '/hand-off',
+    params: { debug: '1' },
+    fragment: { locale: 'it' },
+    recipient,
+    pollMs: 60_000,
+  });
+  handoff.start();
+  const live = await new Promise<string>((resolve) => {
+    const check = (): void => {
+      const { url } = handoff.getState();
+      if (url) resolve(url);
+    };
+    handoff.subscribe(check);
+    check();
+  });
+
+  const parsed = new URL(live);
+  assert.equal(parsed.origin, 'https://send.test');
+  assert.equal(parsed.pathname, '/hand-off');
+  assert.equal(parsed.searchParams.get('debug'), '1');
+  assert.ok(parsed.searchParams.get('token'), 'the token stays in the query, where the page reads it');
+
+  // The halves are the point: what the caller asked to keep off the server has
+  // to still be off it, and the key with it.
+  const hash = new URLSearchParams(parsed.hash.slice(1));
+  assert.equal(hash.get('locale'), 'it');
+  assert.equal(hash.get('k'), recipient.publicKey);
+  assert.equal(parsed.searchParams.get('k'), null);
+  assert.equal(parsed.searchParams.get('locale'), null);
+
+  handoff.destroy();
+});
+
+test('a fragment claiming the key parameter is refused, not merged', async () => {
+  const { baseUrl, broker } = await harness();
+  const transport = createTransport({ baseUrl });
+
+  // Silently winning this collision either way is worse than refusing it: one
+  // way discards what the caller asked for, the other ships a key nothing on
+  // this device can open.
+  assert.throws(
+    () =>
+      createHandoffSession({
+        mint: () => broker.mint('shop'),
+        transport,
+        fragment: { k: 'SOMEONE-ELSES-KEY' },
+        recipient: { publicKey: 'MINE' },
+        pollMs: 60_000,
+      }),
+    /reserved/,
+  );
+});
+
 test('a queue holding sealed and unsealed items works either way', async () => {
   const { baseUrl, broker, sink } = await harness({ maxBytes: 4096, inspect: null });
   const transport = createTransport({ baseUrl });

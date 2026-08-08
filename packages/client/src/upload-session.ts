@@ -60,10 +60,10 @@ export interface UploadSessionOptions {
    * in the URL fragment, and link rewriters, chat preview generators and URL
    * shorteners all strip fragments — so `seal` can be undefined for reasons
    * that have nothing to do with the page and everything to do with how the
-   * link reached it. Supplying your own `buildUrl` to the handoff session drops
-   * the key the same way.
+   * link reached it. A URL rewritten by hand on the requester's side loses it
+   * the same way.
    *
-   * Without this, either of those silently downgrades the upload to plaintext.
+   * Without this, any of those silently downgrades the upload to plaintext.
    * With it, the session refuses in `error` with `seal-required` and never
    * issues a request.
    *

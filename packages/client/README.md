@@ -17,7 +17,9 @@ plain callback — needs. `@chiljs/react` is a thin binding over exactly this.
 
 `createHandoffSession` is the requester's side: mints, polls, and reports whether the
 code on screen is `live`, `claimed`, `received`, `expired` or `invalid`. It
-gives you a `url` string; render it with your own QR library.
+gives you a `url` string; render it with your own QR library. Shape it with
+`origin`, `path` (default `/`), `params` and `fragment` — and for anything those
+cannot express, transform the string yourself at the point of use.
 
 Uploads use `XMLHttpRequest` when progress is asked for, because `fetch` still
 cannot report it — request streaming needs `duplex: 'half'` over HTTP/2 and is

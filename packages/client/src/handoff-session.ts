@@ -48,15 +48,28 @@ export interface HandoffSessionOptions {
    */
   mint: (signal?: AbortSignal) => Promise<MintResult>;
   transport: Transport;
-  /** Defaults to `handoffUrl({ token })` — this origin, `/upload`. */
-  buildUrl?: (token: string) => string;
+  /** Defaults to `location.origin`. */
+  origin?: string;
+  /** The page that reads the token and does the upload. Defaults to `/`. */
+  path?: string;
+  /** Extra query values — a debug flag, a locale. The server sees these. */
+  params?: Record<string, string>;
+  /**
+   * Extra fragment values. The server never sees these.
+   *
+   * `k` is reserved for the recipient's key and supplying it throws: it is
+   * either a duplicate of what the session is about to write, or a key nothing
+   * on this device can open.
+   */
+  fragment?: Record<string, string>;
   /**
    * Puts this device's public key in the URL fragment, so the sender can seal the
    * upload to it and the server stores something it cannot read.
    *
-   * Ignored when `buildUrl` is supplied — build the fragment yourself with
-   * `handoffUrl({ fragment: { k: recipient.publicKey } })`, or the key silently
-   * stops travelling and the uploads arrive in the clear.
+   * The session owns this placement. The token goes in the query because the
+   * page must read it back, and the key goes in the fragment because a browser
+   * never sends one to the server — neither is an application's choice, so
+   * neither is overridable.
    */
   recipient?: RecipientLike;
   /** How often to ask whether the displayed code is still live. */
@@ -86,16 +99,29 @@ export interface HandoffSession extends Observable<HandoffState> {
  * code was the one used. Asking about the token itself is.
  */
 export function createHandoffSession(options: HandoffSessionOptions): HandoffSession {
-  const { mint, transport, buildUrl, recipient, onEvent } = options;
+  const { mint, transport, origin, path, params, fragment, recipient, onEvent } = options;
   const pollMs = options.pollMs ?? 5000;
   const now = options.now ?? (() => Date.now());
-  const toUrl =
-    buildUrl ??
-    ((token: string) =>
-      handoffUrl({
-        token,
-        fragment: recipient ? { [KEY_FRAGMENT_PARAM]: recipient.publicKey } : undefined,
-      }));
+
+  if (fragment && KEY_FRAGMENT_PARAM in fragment) {
+    throw new Error(`fragment.${KEY_FRAGMENT_PARAM} is reserved for the recipient's key`);
+  }
+
+  // No hook to override this. An override is how the key goes missing: it
+  // replaces the one line that places it, the types stay happy, and the uploads
+  // arrive in the clear from a deployment that asked for encryption. A URL shape
+  // these options cannot express — a hash router, a redirector — is a string
+  // transform on `state.url` at the point of use, where it is visibly yours.
+  const toUrl = (token: string): string =>
+    handoffUrl({
+      origin,
+      path,
+      token,
+      params,
+      fragment: recipient
+        ? { ...fragment, [KEY_FRAGMENT_PARAM]: recipient.publicKey }
+        : fragment,
+    });
 
   const store = createStore<HandoffState>({
     phase: 'minting',
